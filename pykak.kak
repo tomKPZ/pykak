@@ -21,7 +21,16 @@ define-command pykak-init %{
     }
 }
 
+define-command pykak-autoinit %{
+    try %{
+        nop %opt{pykak_pid}
+    } catch %{
+        pykak-init
+    }
+}
+
 define-command pykak-request -params 1 %{
+    pykak-autoinit
     echo -to-file %opt{kak2py} %arg{1}
     pykak-response
 }
