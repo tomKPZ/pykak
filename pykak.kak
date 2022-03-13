@@ -34,3 +34,8 @@ define-command pykak-request -params 1 %{
     echo -to-file %opt{kak2py} %arg{1}
     pykak-response
 }
+
+define-command python -params 1 %{
+    pykak-request %arg{1}
+}
+alias global py python

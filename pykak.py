@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
+import textwrap
 import sys
 
 
@@ -10,9 +11,8 @@ def main():
     parser.add_argument('py2kak', type=str)
     args = parser.parse_args()
     while True:
-        request = open(args.kak2py).read()
-        response = 'echo "pykak response"'
-        open(args.py2kak, 'w').write(response)
+        request = textwrap.dedent(open(args.kak2py).read())
+        exec(request)
     return 0
 
 
