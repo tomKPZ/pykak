@@ -1,3 +1,5 @@
+declare-option -hidden str pykak_source %val{source}
+
 define-command pykak-init %{
     evaluate-commands %sh{
         tmp_dir=$(mktemp -d -t pykak-XXXXXX)
@@ -9,7 +11,7 @@ define-command pykak-init %{
         mkfifo "$kak2pyb"
         mkfifo "$py2kaka"
         mkfifo "$py2kakb"
-        file=/home/tom/dev/local/pykak/pykak.py
+        file="$(dirname $kak_opt_pykak_source)/pykak.py"
         python3 "$file" "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
             > /dev/null 2>&1 </dev/null &
         pykak_pid=$!
