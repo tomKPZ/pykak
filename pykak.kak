@@ -32,10 +32,64 @@ define-command pykak-autoinit %{
 define-command pykak-request -params 1 %{
     pykak-autoinit
     echo -to-file %opt{kak2py} %arg{1}
+}
+
+define-command pykak-response8 %{
+    pykak-response; pykak-response;
+    pykak-response; pykak-response;
+    pykak-response; pykak-response;
+    pykak-response; pykak-response;
+}
+define-command pykak-response64 %{
+    pykak-response8; pykak-response8;
+    pykak-response8; pykak-response8;
+    pykak-response8; pykak-response8;
+    pykak-response8; pykak-response8;
+}
+define-command pykak-response512 %{
+    pykak-response64; pykak-response64;
+    pykak-response64; pykak-response64;
+    pykak-response64; pykak-response64;
+    pykak-response64; pykak-response64;
+}
+define-command pykak-response4096 %{
+    pykak-response512; pykak-response512;
+    pykak-response512; pykak-response512;
+    pykak-response512; pykak-response512;
+    pykak-response512; pykak-response512;
+}
+define-command pykak-response32768 %{
+    pykak-response4096; pykak-response4096;
+    pykak-response4096; pykak-response4096;
+    pykak-response4096; pykak-response4096;
+    pykak-response4096; pykak-response4096;
+}
+define-command pykak-response262114 %{
+    pykak-response32768; pykak-response32768;
+    pykak-response32768; pykak-response32768;
+    pykak-response32768; pykak-response32768;
+    pykak-response32768; pykak-response32768;
+}
+define-command pykak-response-inf %{
     pykak-response
+    pykak-response8
+    pykak-response64
+    pykak-response512
+    pykak-response4096
+    pykak-response32768
+    pykak-response262114
+    pykak-response-inf
 }
 
 define-command python -params 1 %{
     pykak-request %arg{1}
+    try %{
+        # pykak-response-inf
+        pykak-response
+        pykak-response
+        pykak-response
+        pykak-response
+        pykak-response
+    }
 }
 alias global py python
