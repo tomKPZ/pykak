@@ -1,19 +1,44 @@
 define-command pykak-init %{
     evaluate-commands %sh{
         tmp_dir=$(mktemp -d -t pykak-XXXXXX)
-        kak2py="$tmp_dir/kak2py.fifo"
-        mkfifo "$kak2py"
-        py2kak="$tmp_dir/py2kak.fifo"
-        mkfifo "$py2kak"
+        kak2pya="$tmp_dir/kak2pya.fifo"
+        kak2pyb="$tmp_dir/kak2pyb.fifo"
+        py2kaka="$tmp_dir/py2kaka.fifo"
+        py2kakb="$tmp_dir/py2kakb.fifo"
+        mkfifo "$kak2pya"
+        mkfifo "$kak2pyb"
+        mkfifo "$py2kaka"
+        mkfifo "$py2kakb"
         file=/home/tom/dev/local/pykak/pykak.py
-        python3 "$file" "$kak2py" "$py2kak" > /dev/null 2>&1 </dev/null &
+        python3 "$file" "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
+            > /dev/null 2>&1 </dev/null &
         pykak_pid=$!
-        echo "declare-option -hidden str kak2py "$kak2py""
-        echo "declare-option -hidden str py2kak "$py2kak""
-        echo "declare-option -hidden str pykak_pid "$pykak_pid""
-        echo "define-command -hidden pykak-response %{"
-        echo "    evaluate-commands %file{$py2kak}"
+        echo declare-option -hidden str kak2pya "$kak2pya"
+        echo declare-option -hidden str kak2pyb "$kak2pyb"
+        echo declare-option -hidden str py2kaka "$py2kaka"
+        echo declare-option -hidden str py2kakb "$py2kakb"
+        echo declare-option -hidden str pykak_pid "$pykak_pid"
+        echo "define-command -hidden pykak-response-a-impl %{"
+        echo "    evaluate-commands %file{$py2kaka}"
         echo "}"
+        echo "define-command -hidden pykak-response-b-impl %{"
+        echo "    evaluate-commands %file{$py2kakb}"
+        echo "}"
+    }
+    define-command -hidden pykak-response-a %{
+        define-command -hidden -override pykak-response %{
+            pykak-response-b
+        }
+        pykak-response-a-impl
+    }
+    define-command -hidden pykak-response-b %{
+        define-command -hidden -override pykak-response %{
+            pykak-response-a
+        }
+        pykak-response-b-impl
+    }
+    define-command -hidden pykak-response %{
+        pykak-response-a
     }
     hook -group pykak global KakEnd .* %{
         kill $kak_pykak_pid
@@ -29,9 +54,25 @@ define-command pykak-autoinit %{
     }
 }
 
+define-command -hidden pykak-request-a -params 1 %{
+    define-command -hidden -override -params 1 pykak-request-impl %{
+        pykak-request-b %arg{1}
+    }
+    echo -to-file %opt{kak2pya} %arg{1}
+}
+define-command -hidden pykak-request-b -params 1 %{
+    define-command -hidden -override -params 1 pykak-request-impl %{
+        pykak-request-a %arg{1}
+    }
+    echo -to-file %opt{kak2pyb} %arg{1}
+}
+define-command -hidden pykak-request-impl -params 1 %{
+    pykak-request-a %arg{1}
+}
+
 define-command pykak-request -params 1 %{
     pykak-autoinit
-    echo -to-file %opt{kak2py} %arg{1}
+    pykak-request-impl %arg{1}
 }
 
 define-command pykak-response8 %{
@@ -84,12 +125,7 @@ define-command pykak-response-inf %{
 define-command python -params 1 %{
     pykak-request %arg{1}
     try %{
-        # pykak-response-inf
-        pykak-response
-        pykak-response
-        pykak-response
-        pykak-response
-        pykak-response
+        pykak-response-inf
     }
 }
 alias global py python
