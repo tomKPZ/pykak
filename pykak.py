@@ -3,7 +3,6 @@
 import argparse
 import itertools
 import textwrap
-import sys
 
 
 parser = argparse.ArgumentParser('pykak server')
@@ -17,13 +16,21 @@ kak2py = itertools.cycle([args.kak2pya, args.kak2pyb])
 py2kak = itertools.cycle([args.py2kaka, args.py2kakb])
 
 
-def reply(response):
+def put(response):
     with open(next(py2kak), 'w') as f:
         f.write(response)
 
 
-while True:
+def get():
     with open(next(kak2py), 'r') as f:
-        request = textwrap.dedent(f.read())
-    exec(request)
-    reply('fail "end of request"')
+        return f.read()
+
+
+def val(name):
+    put('pykak-request "%%val{%s}"' % name)
+    return get()
+
+
+while True:
+    exec(textwrap.dedent(get()))
+    put('fail "no failure, just end of request"')

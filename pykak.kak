@@ -18,27 +18,28 @@ define-command pykak-init %{
         echo declare-option -hidden str py2kaka "$py2kaka"
         echo declare-option -hidden str py2kakb "$py2kakb"
         echo declare-option -hidden str pykak_pid "$pykak_pid"
-        echo "define-command -hidden pykak-response-a-impl %{"
+        echo "define-command -hidden pykak-response-a %{"
         echo "    evaluate-commands %file{$py2kaka}"
         echo "}"
-        echo "define-command -hidden pykak-response-b-impl %{"
+        echo "define-command -hidden pykak-response-b %{"
         echo "    evaluate-commands %file{$py2kakb}"
         echo "}"
     }
-    define-command -hidden pykak-response-a %{
-        define-command -hidden -override pykak-response %{
-            pykak-response-b
+    declare-option -hidden bool py2kak_state true
+    define-command pykak-response -hidden %{
+        declare-option -hidden str response_cmd
+        alias window "pykak_%opt{py2kak_state}" nop
+        try %{
+            pykak_true
+            unalias window pykak_true
+            set-option global py2kak_state false
+            set-option global response_cmd pykak-response-a
+        } catch %{
+            unalias window pykak_false
+            set-option global py2kak_state true
+            set-option global response_cmd pykak-response-b
         }
-        pykak-response-a-impl
-    }
-    define-command -hidden pykak-response-b %{
-        define-command -hidden -override pykak-response %{
-            pykak-response-a
-        }
-        pykak-response-b-impl
-    }
-    define-command -hidden pykak-response %{
-        pykak-response-a
+        evaluate-commands %opt{response_cmd}
     }
     hook -group pykak global KakEnd .* %{
         kill $kak_pykak_pid
@@ -54,25 +55,29 @@ define-command pykak-autoinit %{
     }
 }
 
-define-command -hidden pykak-request-a -params 1 %{
-    define-command -hidden -override -params 1 pykak-request-impl %{
-        pykak-request-b %arg{1}
-    }
+define-command pykak-request-a -hidden -params 1 %{
     echo -to-file %opt{kak2pya} %arg{1}
 }
-define-command -hidden pykak-request-b -params 1 %{
-    define-command -hidden -override -params 1 pykak-request-impl %{
-        pykak-request-a %arg{1}
-    }
+define-command pykak-request-b -hidden -params 1 %{
     echo -to-file %opt{kak2pyb} %arg{1}
 }
-define-command -hidden pykak-request-impl -params 1 %{
-    pykak-request-a %arg{1}
-}
-
-define-command pykak-request -params 1 %{
-    pykak-autoinit
-    pykak-request-impl %arg{1}
+declare-option -hidden bool kak2py_state true
+define-command pykak-request -hidden -params 1 %{
+    alias window "pykak_%opt{kak2py_state}" nop
+    declare-option -hidden str request_cmd
+    try %{
+        pykak_true
+        unalias window pykak_true
+        set-option global kak2py_state false
+        set-option global request_cmd pykak-request-a
+    } catch %{
+        unalias window pykak_false
+        set-option global kak2py_state true
+        set-option global request_cmd pykak-request-b
+    }
+    evaluate-commands %{
+        %opt{request_cmd} %arg{1}
+    }
 }
 
 define-command pykak-response8 %{
@@ -123,6 +128,7 @@ define-command pykak-response-inf %{
 }
 
 define-command python -params 1 %{
+    pykak-autoinit
     pykak-request %arg{1}
     try %{
         pykak-response-inf
