@@ -18,18 +18,20 @@ define-command pykak-init %{
             "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
             > /dev/null 2>&1 </dev/null &
         pykak_pid=$!
-        echo declare-option -hidden str pykak_dir "$pykak_dir"
-        echo declare-option -hidden str kak2pya "$kak2pya"
-        echo declare-option -hidden str kak2pyb "$kak2pyb"
-        echo declare-option -hidden str py2kaka "$py2kaka"
-        echo declare-option -hidden str py2kakb "$py2kakb"
-        echo declare-option -hidden str pykak_pid "$pykak_pid"
-        echo "define-command -hidden pykak-response-a %{"
-        echo "    evaluate-commands %file{$py2kaka}"
-        echo "}"
-        echo "define-command -hidden pykak-response-b %{"
-        echo "    evaluate-commands %file{$py2kakb}"
-        echo "}"
+        echo "
+            declare-option -hidden str pykak_dir \"$pykak_dir\"
+            declare-option -hidden str kak2pya \"$kak2pya\"
+            declare-option -hidden str kak2pyb \"$kak2pyb\"
+            declare-option -hidden str py2kaka \"$py2kaka\"
+            declare-option -hidden str py2kakb \"$py2kakb\"
+            declare-option -hidden str pykak_pid \"$pykak_pid\"
+            define-command -hidden pykak-response-a %{
+                evaluate-commands %file{$py2kaka}
+            }
+            define-command -hidden pykak-response-b %{
+                evaluate-commands %file{$py2kakb}
+            }
+        "
     }
     declare-option -hidden bool py2kak_state true
     define-command pykak-response -hidden %{
