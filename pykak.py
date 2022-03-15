@@ -27,7 +27,7 @@ def _read():
 
 
 def val(name):
-    _write('pk_request "%%val{%s}"' % name)
+    _write('pk_write "%%val{%s}"' % name)
     return _read()
 
 

@@ -25,29 +25,29 @@ def pk_init %{
             decl -hidden str py2kaka \"$py2kaka\"
             decl -hidden str py2kakb \"$py2kakb\"
             decl -hidden str pk_pid \"$pk_pid\"
-            def -hidden pk_response_a %{
+            def -hidden pk_read_a %{
                 eval %file{$py2kaka}
             }
-            def -hidden pk_response_b %{
+            def -hidden pk_read_b %{
                 eval %file{$py2kakb}
             }
         "
     }
     decl -hidden bool py2kak_state true
-    def pk_response -hidden %{
-        decl -hidden str pk_response_cmd
+    def -hidden pk_read %{
+        decl -hidden str pk_read_cmd
         alias global "pk_%opt{py2kak_state}" nop
         try %{
             pk_true
             unalias global pk_true
             set global py2kak_state false
-            set global pk_response_cmd pk_response_a
+            set global pk_read_cmd pk_read_a
         } catch %{
             unalias global pk_false
             set global py2kak_state true
-            set global pk_response_cmd pk_response_b
+            set global pk_read_cmd pk_read_b
         }
-        eval %opt{pk_response_cmd}
+        eval %opt{pk_read_cmd}
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
         kill $kak_opt_pk_pid
@@ -55,7 +55,7 @@ def pk_init %{
     }}
 }
 
-def pk_autoinit %{
+def -hidden pk_autoinit %{
     try %{
         nop %opt{pk_pid}
     } catch %{
@@ -63,83 +63,66 @@ def pk_autoinit %{
     }
 }
 
-def pk_request_a -hidden -params 1 %{
+def pk_write_a -hidden -params 1 %{
     echo -to-file %opt{kak2pya} %arg{1}
 }
-def pk_request_b -hidden -params 1 %{
+def pk_write_b -hidden -params 1 %{
     echo -to-file %opt{kak2pyb} %arg{1}
 }
 decl -hidden bool kak2py_state true
-def pk_request -hidden -params 1 %{
+def pk_write -hidden -params 1 %{
     alias global "pk_%opt{kak2py_state}" nop
-    decl -hidden str request_cmd
+    decl -hidden str write_cmd
     try %{
         pk_true
         unalias global pk_true
         set global kak2py_state false
-        set global request_cmd pk_request_a
+        set global write_cmd pk_write_a
     } catch %{
         unalias global pk_false
         set global kak2py_state true
-        set global request_cmd pk_request_b
+        set global write_cmd pk_write_b
     }
     eval %{
-        %opt{request_cmd} %arg{1}
+        %opt{write_cmd} %arg{1}
     }
 }
 
-def pk_response8 %{
-    pk_response; pk_response;
-    pk_response; pk_response;
-    pk_response; pk_response;
-    pk_response; pk_response;
+def -hidden pk_read_8 %{
+    pk_read; pk_read; pk_read; pk_read;
+    pk_read; pk_read; pk_read; pk_read;
 }
-def pk_response64 %{
-    pk_response8; pk_response8;
-    pk_response8; pk_response8;
-    pk_response8; pk_response8;
-    pk_response8; pk_response8;
+def -hidden pk_read_64 %{
+    pk_read_8; pk_read_8; pk_read_8; pk_read_8;
+    pk_read_8; pk_read_8; pk_read_8; pk_read_8;
 }
-def pk_response512 %{
-    pk_response64; pk_response64;
-    pk_response64; pk_response64;
-    pk_response64; pk_response64;
-    pk_response64; pk_response64;
+def -hidden pk_read_512 %{
+    pk_read_64; pk_read_64; pk_read_64; pk_read_64;
+    pk_read_64; pk_read_64; pk_read_64; pk_read_64;
 }
-def pk_response4096 %{
-    pk_response512; pk_response512;
-    pk_response512; pk_response512;
-    pk_response512; pk_response512;
-    pk_response512; pk_response512;
+def -hidden pk_read_4096 %{
+    pk_read_512; pk_read_512; pk_read_512; pk_read_512;
+    pk_read_512; pk_read_512; pk_read_512; pk_read_512;
 }
-def pk_response32768 %{
-    pk_response4096; pk_response4096;
-    pk_response4096; pk_response4096;
-    pk_response4096; pk_response4096;
-    pk_response4096; pk_response4096;
+def -hidden pk_read_32768 %{
+    pk_read_4096; pk_read_4096; pk_read_4096; pk_read_4096;
+    pk_read_4096; pk_read_4096; pk_read_4096; pk_read_4096;
 }
-def pk_response262114 %{
-    pk_response32768; pk_response32768;
-    pk_response32768; pk_response32768;
-    pk_response32768; pk_response32768;
-    pk_response32768; pk_response32768;
-}
-def pk_response_inf %{
-    pk_response
-    pk_response8
-    pk_response64
-    pk_response512
-    pk_response4096
-    pk_response32768
-    pk_response262114
-    pk_response_inf
+def -hidden pk_read_inf %{
+    pk_read
+    pk_read_8
+    pk_read_64
+    pk_read_512
+    pk_read_4096
+    pk_read_32768
+    pk_read_inf
 }
 
 def python -params 1 %{
     pk_autoinit
-    pk_request %arg{1}
+    pk_write %arg{1}
     try %{
-        pk_response_inf
+        pk_read_inf
     }
 }
 alias global py python
