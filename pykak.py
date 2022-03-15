@@ -33,4 +33,4 @@ def val(name):
 
 while True:
     exec(textwrap.dedent(_read()))
-    _write('fail "no failure, just end of request"')
+    _write('alias global pk_done nop')
