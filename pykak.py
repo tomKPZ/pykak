@@ -38,7 +38,7 @@ def _read():
 
 def _getter(prefix):
     def getter_impl(name):
-        _write('pk_write "%%%s{%s}"' % (prefix, str(name)))
+        _write('pk_write "%%%s{%s}"' % (prefix, name))
         return _read()
     return getter_impl
 
