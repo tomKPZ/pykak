@@ -36,9 +36,17 @@ def _read():
     return data
 
 
-def val(name):
-    _write('pk_write "%%val{%s}"' % name)
-    return _read()
+def _getter(prefix):
+    def getter_impl(name):
+        _write('pk_write "%%%s{%s}"' % (prefix, str(name)))
+        return _read()
+    return getter_impl
+
+
+arg = _getter('arg')
+opt = _getter('opt')
+reg = _getter('reg')
+val = _getter('val')
 
 
 while True:
