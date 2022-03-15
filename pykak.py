@@ -3,7 +3,14 @@
 import argparse
 import itertools
 import textwrap
+import traceback
 
+
+class KakException(Exception):
+    pass
+
+
+_ERROR_UUID = 'f74c66de-3e90-4ee5-ae33-bf7e8e358cb0'
 
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('kak2pya', type=str)
@@ -23,7 +30,10 @@ def _write(response):
 
 def _read():
     with open(next(_kak2py), 'r') as f:
-        return f.read()
+        data = f.read()
+    if data.startswith(_ERROR_UUID):
+        raise KakException(data.removeprefix(_ERROR_UUID))
+    return data
 
 
 def val(name):
@@ -32,5 +42,9 @@ def val(name):
 
 
 while True:
-    exec(textwrap.dedent(_read()))
+    try:
+        exec(textwrap.dedent(_read()))
+    except:
+        exc = traceback.format_exc()
+        _write('echo -debug %%{pykak error: %s}' % exc)
     _write('alias global pk_done nop')

@@ -1,6 +1,7 @@
 decl str pk_interpreter python3
 
 decl -hidden str pk_source %val{source}
+decl -hidden str error_uuid f74c66de-3e90-4ee5-ae33-bf7e8e358cb0
 
 def pk_init %{
     eval %sh{
@@ -57,7 +58,11 @@ def -hidden pk_read %{
         set global py2kak_state true
         set global pk_read_cmd pk_read_b
     }
-    eval %opt{pk_read_cmd}
+    try %{
+        eval %opt{pk_read_cmd}
+    } catch %{
+        pk_write "%opt{error_uuid}%val{error}"
+    }
 }
 
 def pk_write_a -hidden -params 1 %{
@@ -130,24 +135,31 @@ def -hidden pk_read_65536 %{
 }
 def -hidden pk_read_inf %{
     try %{
+        pk_read_1
         pk_done
     } catch %{
-        pk_read
+        pk_read_4
         pk_done
     } catch %{
-        pk_read_8
+        pk_read_16
         pk_done
     } catch %{
         pk_read_64
         pk_done
     } catch %{
-        pk_read_512
+        pk_read_256
+        pk_done
+    } catch %{
+        pk_read_1024
         pk_done
     } catch %{
         pk_read_4096
         pk_done
     } catch %{
-        pk_read_32768
+        pk_read_16384
+        pk_done
+    } catch %{
+        pk_read_65536
         pk_done
     } catch %{
         pk_read_inf
