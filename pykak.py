@@ -54,6 +54,7 @@ while True:
         exec(textwrap.dedent(_read()))
     except:
         exc = traceback.format_exc().replace('"', '""')
-        _write('echo "pykak error: see *debug* buffer"')
+        _write('echo -markup "{Error}{\\}pykak error: '
+               'see *debug* buffer"')
         _write('echo -debug "pykak error: %s"' % exc)
     _write('alias global pk_done nop')
