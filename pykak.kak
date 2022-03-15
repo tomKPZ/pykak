@@ -4,11 +4,11 @@ declare-option -hidden str pykak_source %val{source}
 
 define-command pykak-init %{
     evaluate-commands %sh{
-        tmp_dir=$(mktemp -d -t pykak-XXXXXX)
-        kak2pya="$tmp_dir/kak2pya.fifo"
-        kak2pyb="$tmp_dir/kak2pyb.fifo"
-        py2kaka="$tmp_dir/py2kaka.fifo"
-        py2kakb="$tmp_dir/py2kakb.fifo"
+        pykak_dir=$(mktemp -d -t pykak-XXXXXX)
+        kak2pya="$pykak_dir/kak2pya.fifo"
+        kak2pyb="$pykak_dir/kak2pyb.fifo"
+        py2kaka="$pykak_dir/py2kaka.fifo"
+        py2kakb="$pykak_dir/py2kakb.fifo"
         mkfifo "$kak2pya"
         mkfifo "$kak2pyb"
         mkfifo "$py2kaka"
@@ -18,6 +18,7 @@ define-command pykak-init %{
             "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
             > /dev/null 2>&1 </dev/null &
         pykak_pid=$!
+        echo declare-option -hidden str pykak_dir "$pykak_dir"
         echo declare-option -hidden str kak2pya "$kak2pya"
         echo declare-option -hidden str kak2pyb "$kak2pyb"
         echo declare-option -hidden str py2kaka "$py2kaka"
@@ -46,10 +47,10 @@ define-command pykak-init %{
         }
         evaluate-commands %opt{response_cmd}
     }
-    hook -group pykak global KakEnd .* %{
-        kill $kak_pykak_pid
-        nop %sh{rm -rf "$kak_tmp_dir"}
-    }
+    hook -group pykak global KakEnd .* %{ nop %sh{
+        kill $kak_opt_pykak_pid
+        rm -rf "$kak_opt_pykak_dir"
+    }}
 }
 
 define-command pykak-autoinit %{
