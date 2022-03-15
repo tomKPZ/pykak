@@ -36,14 +36,14 @@ def pk_init %{
     decl -hidden bool py2kak_state true
     def pk_response -hidden %{
         decl -hidden str pk_response_cmd
-        alias window "pk_%opt{py2kak_state}" nop
+        alias global "pk_%opt{py2kak_state}" nop
         try %{
             pk_true
-            unalias window pk_true
+            unalias global pk_true
             set global py2kak_state false
             set global pk_response_cmd pk_response_a
         } catch %{
-            unalias window pk_false
+            unalias global pk_false
             set global py2kak_state true
             set global pk_response_cmd pk_response_b
         }
@@ -71,15 +71,15 @@ def pk_request_b -hidden -params 1 %{
 }
 decl -hidden bool kak2py_state true
 def pk_request -hidden -params 1 %{
-    alias window "pk_%opt{kak2py_state}" nop
+    alias global "pk_%opt{kak2py_state}" nop
     decl -hidden str request_cmd
     try %{
         pk_true
-        unalias window pk_true
+        unalias global pk_true
         set global kak2py_state false
         set global request_cmd pk_request_a
     } catch %{
-        unalias window pk_false
+        unalias global pk_false
         set global kak2py_state true
         set global request_cmd pk_request_b
     }
