@@ -5,32 +5,32 @@ import itertools
 import textwrap
 
 
-parser = argparse.ArgumentParser('pykak server')
-parser.add_argument('kak2pya', type=str)
-parser.add_argument('kak2pyb', type=str)
-parser.add_argument('py2kaka', type=str)
-parser.add_argument('py2kakb', type=str)
-args = parser.parse_args()
+_parser = argparse.ArgumentParser('pykak server')
+_parser.add_argument('kak2pya', type=str)
+_parser.add_argument('kak2pyb', type=str)
+_parser.add_argument('py2kaka', type=str)
+_parser.add_argument('py2kakb', type=str)
+_args = _parser.parse_args()
 
-kak2py = itertools.cycle([args.kak2pya, args.kak2pyb])
-py2kak = itertools.cycle([args.py2kaka, args.py2kakb])
+_kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
+_py2kak = itertools.cycle([_args.py2kaka, _args.py2kakb])
 
 
-def put(response):
-    with open(next(py2kak), 'w') as f:
+def _write(response):
+    with open(next(_py2kak), 'w') as f:
         f.write(response)
 
 
-def get():
-    with open(next(kak2py), 'r') as f:
+def _read():
+    with open(next(_kak2py), 'r') as f:
         return f.read()
 
 
 def val(name):
-    put('pykak-request "%%val{%s}"' % name)
-    return get()
+    _write('pykak-request "%%val{%s}"' % name)
+    return _read()
 
 
 while True:
-    exec(textwrap.dedent(get()))
-    put('fail "no failure, just end of request"')
+    exec(textwrap.dedent(_read()))
+    _write('fail "no failure, just end of request"')
