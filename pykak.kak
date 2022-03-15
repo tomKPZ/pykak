@@ -1,3 +1,5 @@
+declare-option str pykak_interpreter python3
+
 declare-option -hidden str pykak_source %val{source}
 
 define-command pykak-init %{
@@ -12,7 +14,8 @@ define-command pykak-init %{
         mkfifo "$py2kaka"
         mkfifo "$py2kakb"
         file="$(dirname $kak_opt_pykak_source)/pykak.py"
-        python3 "$file" "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
+        "$kak_opt_pykak_interpreter" "$file" \
+            "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
             > /dev/null 2>&1 </dev/null &
         pykak_pid=$!
         echo declare-option -hidden str kak2pya "$kak2pya"
