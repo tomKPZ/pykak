@@ -25,29 +25,9 @@ def pk_init %{
             decl -hidden str py2kaka \"$py2kaka\"
             decl -hidden str py2kakb \"$py2kakb\"
             decl -hidden str pk_pid \"$pk_pid\"
-            def -hidden pk_read_a %{
-                eval %file{$py2kaka}
-            }
-            def -hidden pk_read_b %{
-                eval %file{$py2kakb}
-            }
+            def -hidden pk_read_a %{ eval %file{$py2kaka} }
+            def -hidden pk_read_b %{ eval %file{$py2kakb} }
         "
-    }
-    decl -hidden bool py2kak_state true
-    def -hidden pk_read %{
-        decl -hidden str pk_read_cmd
-        alias global "pk_%opt{py2kak_state}" nop
-        try %{
-            pk_true
-            unalias global pk_true
-            set global py2kak_state false
-            set global pk_read_cmd pk_read_a
-        } catch %{
-            unalias global pk_false
-            set global py2kak_state true
-            set global pk_read_cmd pk_read_b
-        }
-        eval %opt{pk_read_cmd}
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
         kill $kak_opt_pk_pid
@@ -61,6 +41,23 @@ def -hidden pk_autoinit %{
     } catch %{
         pk_init
     }
+}
+
+decl -hidden bool py2kak_state true
+def -hidden pk_read %{
+    decl -hidden str pk_read_cmd
+    alias global "pk_%opt{py2kak_state}" nop
+    try %{
+        pk_true
+        unalias global pk_true
+        set global py2kak_state false
+        set global pk_read_cmd pk_read_a
+    } catch %{
+        unalias global pk_false
+        set global py2kak_state true
+        set global pk_read_cmd pk_read_b
+    }
+    eval %opt{pk_read_cmd}
 }
 
 def pk_write_a -hidden -params 1 %{
