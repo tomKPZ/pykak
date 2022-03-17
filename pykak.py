@@ -26,6 +26,7 @@ def _write_inf():
                         while True:
                             # TODO: Warn about unconsumed data.
                             _read_queue.get_nowait()
+                            _read_queue.task_done()
                     except queue.Empty:
                         pass
                     data = 'alias global pk_done nop'
@@ -38,11 +39,11 @@ def _read_inf():
         with open(fname, 'r') as f:
             with _io_lock:
                 _read_queue.put(f.read())
-                _read_queue.task_done()
 
 
 def _read():
     data = _read_queue.get()
+    _read_queue.task_done()
     if data.startswith(_ERROR_UUID):
         raise KakException(data.removeprefix(_ERROR_UUID))
     return data
