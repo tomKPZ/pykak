@@ -12,11 +12,24 @@ class KakException(Exception):
     pass
 
 
+class DoneToken:
+    pass
+
+
 def _write_inf():
     for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
         with open(fname, 'w') as f:
             with _io_lock:
-                f.write(_write_queue.get())
+                data = _write_queue.get()
+                if type(data) == DoneToken:
+                    try:
+                        while True:
+                            # TODO: Warn about unconsumed data.
+                            _read_queue.get_nowait()
+                    except queue.Empty:
+                        pass
+                    data = 'alias global pk_done nop'
+                f.write(data)
                 _write_queue.task_done()
 
 
@@ -78,5 +91,5 @@ while True:
         _write('echo -markup "{Error}{\\}pykak error: '
                'see *debug* buffer"')
         _write('echo -debug "pykak error: %s"' % exc)
-    _write('alias global pk_done nop')
+    _write(DoneToken())
     _write_queue.join()
