@@ -21,12 +21,9 @@ _parser.add_argument('py2kaka', type=str)
 _parser.add_argument('py2kakb', type=str)
 _args = _parser.parse_args()
 
-_kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
-
 
 def _read():
-    with open(next(_kak2py), 'r') as f:
-        data = f.read()
+    data = _read_queue.get()
     if data.startswith(_ERROR_UUID):
         raise KakException(data.removeprefix(_ERROR_UUID))
     return data
@@ -45,6 +42,7 @@ reg = _getter('reg')
 val = _getter('val')
 
 _write_queue = queue.Queue()
+_read_queue = queue.Queue()
 
 
 def _write_inf():
@@ -53,12 +51,20 @@ def _write_inf():
             f.write(_write_queue.get())
 
 
+def _read_inf():
+    for fname in itertools.cycle([_args.kak2pya, _args.kak2pyb]):
+        with open(fname, 'r') as f:
+            _read_queue.put(f.read())
+
+
 def _write(response):
     _write_queue.put(response)
 
 
 _write_thread = threading.Thread(target=_write_inf)
 _write_thread.start()
+_read_thread = threading.Thread(target=_read_inf)
+_read_thread.start()
 
 while True:
     try:
