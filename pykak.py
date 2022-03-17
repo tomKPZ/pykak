@@ -22,12 +22,6 @@ _parser.add_argument('py2kakb', type=str)
 _args = _parser.parse_args()
 
 _kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
-_py2kak = itertools.cycle([_args.py2kaka, _args.py2kakb])
-
-
-def _write_raw(response):
-    with open(next(_py2kak), 'w') as f:
-        f.write(response)
 
 
 def _read():
@@ -54,8 +48,9 @@ _write_queue = queue.Queue()
 
 
 def _write_inf():
-    while True:
-        _write_raw(_write_queue.get())
+    for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
+        with open(fname, 'w') as f:
+            f.write(_write_queue.get())
 
 
 def _write(response):
