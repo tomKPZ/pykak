@@ -2,7 +2,9 @@
 
 import argparse
 import itertools
+import queue
 import textwrap
+import threading
 import traceback
 
 
@@ -23,7 +25,7 @@ _kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
 _py2kak = itertools.cycle([_args.py2kaka, _args.py2kakb])
 
 
-def _write(response):
+def _write_raw(response):
     with open(next(_py2kak), 'w') as f:
         f.write(response)
 
@@ -48,6 +50,20 @@ opt = _getter('opt')
 reg = _getter('reg')
 val = _getter('val')
 
+_write_queue = queue.Queue()
+
+
+def _write_inf():
+    while True:
+        _write_raw(_write_queue.get())
+
+
+def _write(response):
+    _write_queue.put(response)
+
+
+_write_thread = threading.Thread(target=_write_inf)
+_write_thread.start()
 
 while True:
     try:
