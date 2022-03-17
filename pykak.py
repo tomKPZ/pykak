@@ -15,13 +15,17 @@ class KakException(Exception):
 def _write_inf():
     for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
         with open(fname, 'w') as f:
-            f.write(_write_queue.get())
+            with _io_lock:
+                f.write(_write_queue.get())
+                _write_queue.task_done()
 
 
 def _read_inf():
     for fname in itertools.cycle([_args.kak2pya, _args.kak2pyb]):
         with open(fname, 'r') as f:
-            _read_queue.put(f.read())
+            with _io_lock:
+                _read_queue.put(f.read())
+                _read_queue.task_done()
 
 
 def _read():
@@ -54,6 +58,8 @@ _args = _parser.parse_args()
 _write_queue = queue.Queue()
 _read_queue = queue.Queue()
 
+_io_lock = threading.Lock()
+
 _write_thread = threading.Thread(target=_write_inf)
 _write_thread.start()
 _read_thread = threading.Thread(target=_read_inf)
@@ -73,3 +79,4 @@ while True:
                'see *debug* buffer"')
         _write('echo -debug "pykak error: %s"' % exc)
     _write('alias global pk_done nop')
+    _write_queue.join()
