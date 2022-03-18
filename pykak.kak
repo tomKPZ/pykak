@@ -48,12 +48,6 @@ def -hidden pk_read %{
     }
 }
 
-def pk_write_a -hidden -params 1 %{
-    echo -to-file %opt{kak2pya} %arg{1}
-}
-def pk_write_b -hidden -params 1 %{
-    echo -to-file %opt{kak2pyb} %arg{1}
-}
 decl -hidden bool kak2py_state true
 def pk_write -hidden -params 1 %{
     alias global "pk_%opt{kak2py_state}" nop
@@ -62,14 +56,11 @@ def pk_write -hidden -params 1 %{
         pk_true
         unalias global pk_true
         set global kak2py_state false
-        set global write_cmd pk_write_a
+        echo -to-file %opt{kak2pya} %arg{1}
     } catch %{
         unalias global pk_false
         set global kak2py_state true
-        set global write_cmd pk_write_b
-    }
-    eval %{
-        %opt{write_cmd} %arg{1}
+        echo -to-file %opt{kak2pyb} %arg{1}
     }
 }
 
