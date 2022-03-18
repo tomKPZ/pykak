@@ -59,6 +59,8 @@ def _write_inf():
 def _read_inf():
     for fname in itertools.cycle([_args.kak2pya, _args.kak2pyb]):
         with open(fname, 'r') as f:
+            # TODO: There's a race condition between the open above and
+            # obtaining the lock below.
             with _io_lock:
                 _read_queue.put(f.read())
 
@@ -107,7 +109,11 @@ val = _getter('val')
 
 while True:
     try:
-        exec(textwrap.dedent(_read()))
+        try:
+            data = _read()
+        except:
+            assert False
+        exec(textwrap.dedent(data))
     except:
         exc = traceback.format_exc().replace('"', '""')
         _write(_echo_error(exc))
