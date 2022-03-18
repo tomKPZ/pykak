@@ -4,27 +4,20 @@ decl -hidden str pk_source %val{source}
 
 def pk_init %{
     eval %sh{
-        pk_dir=$(mktemp -d -t pykak_XXXXXX)
-        kak2pya="$pk_dir/kak2pya.fifo"
-        kak2pyb="$pk_dir/kak2pyb.fifo"
-        py2kak="$pk_dir/py2kak.fifo"
-        mkfifo "$kak2pya"
-        mkfifo "$kak2pyb"
-        mkfifo "$py2kak"
+        pk_dir="$(mktemp -d -t pykak_XXXXXX)"
+        mkfifo "$pk_dir/kak2py_a.fifo"
+        mkfifo "$pk_dir/kak2py_b.fifo"
+        mkfifo "$pk_dir/py2kak.fifo"
         file="$(dirname $kak_opt_pk_source)/pykak.py"
-        "$kak_opt_pk_interpreter" "$file" \
-            "$kak2pya" "$kak2pyb" "$py2kak" \
+        "$kak_opt_pk_interpreter" "$file" "$pk_dir" \
             > /dev/null 2>&1 </dev/null &
         pk_pid=$!
         echo "
             decl -hidden str pk_dir \"$pk_dir\"
-            decl -hidden str kak2pya \"$kak2pya\"
-            decl -hidden str kak2pyb \"$kak2pyb\"
-            decl -hidden str py2kak \"$py2kak\"
             decl -hidden str pk_pid \"$pk_pid\"
             def -hidden pk_read %{
                 try %{
-                    eval %file{$py2kak}
+                    eval %file{$pk_dir/py2kak.fifo}
                     pk_write a
                 } catch %{
                     pk_write \"e%val{error}\"
@@ -54,11 +47,11 @@ def pk_write -hidden -params 1 %{
         pk_true
         unalias global pk_true
         set global kak2py_state false
-        echo -to-file %opt{kak2pya} %arg{1}
+        echo -to-file "%opt{pk_dir}/kak2py_a.fifo" %arg{1}
     } catch %{
         unalias global pk_false
         set global kak2py_state true
-        echo -to-file %opt{kak2pyb} %arg{1}
+        echo -to-file "%opt{pk_dir}/kak2py_b.fifo" %arg{1}
     }
 }
 

@@ -3,6 +3,7 @@
 import argparse
 import collections
 import itertools
+import os
 import textwrap
 import traceback
 
@@ -12,18 +13,19 @@ class KakException(Exception):
 
 
 _parser = argparse.ArgumentParser('pykak server')
-_parser.add_argument('kak2pya', type=str)
-_parser.add_argument('kak2pyb', type=str)
-_parser.add_argument('py2kak', type=str)
+_parser.add_argument('pk_dir', type=str)
 _args = _parser.parse_args()
 
-_kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
+_kak2py_a = os.path.join(_args.pk_dir, 'kak2py_a.fifo')
+_kak2py_b = os.path.join(_args.pk_dir, 'kak2py_b.fifo')
+_kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
+_py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
 
 _replies = collections.deque()
 
 
 def _write(response):
-    with open(_args.py2kak, 'w') as f:
+    with open(_py2kak, 'w') as f:
         f.write(response)
     while True:
         data = _raw_read()
