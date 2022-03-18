@@ -16,20 +16,38 @@ class DoneToken:
     pass
 
 
+def _drain_read_queue():
+    data = []
+    try:
+        while True:
+            data.append(_read_queue.get_nowait())
+            _read_queue.task_done()
+    except queue.Empty:
+        pass
+    return data
+
+
+def _echo_error(message):
+    message = message.replace('"', '""')
+    return ('echo -markup "{Error}{\\}pykak error: '
+            'see *debug* buffer"; ' +
+            ('echo -debug "pykak error: %s"' % message))
+
+
 def _write_inf():
     for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
         with open(fname, 'w') as f:
             with _io_lock:
                 data = _write_queue.get()
                 if type(data) == DoneToken:
-                    try:
-                        while True:
-                            # TODO: Warn about unconsumed data.
-                            _read_queue.get_nowait()
-                            _read_queue.task_done()
-                    except queue.Empty:
-                        pass
-                    data = 'alias global pk_done nop'
+                    data = ''
+                    unhandled = _drain_read_queue()
+                    if unhandled:
+                        message = 'unhandled messages: '
+                        message += '\n'.join(unhandled)
+                        data = _echo_error(message)
+                        data += '; '
+                    data += 'alias global pk_done nop'
                 f.write(data)
                 _write_queue.task_done()
 
@@ -89,8 +107,6 @@ while True:
         exec(textwrap.dedent(_read()))
     except:
         exc = traceback.format_exc().replace('"', '""')
-        _write('echo -markup "{Error}{\\}pykak error: '
-               'see *debug* buffer"')
-        _write('echo -debug "pykak error: %s"' % exc)
+        _write(_echo_error(exc))
     _write(DoneToken())
     _write_queue.join()
