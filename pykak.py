@@ -27,7 +27,7 @@ def _write(response):
     with open(_py2kak, 'w') as f:
         f.write(response)
     while True:
-        dtype, data = _raw_read()
+        dtype, data = _read()
         if dtype == 'a':
             return
         elif dtype == 'd':
@@ -40,21 +40,17 @@ def _write(response):
             raise Exception('invalid reply type')
 
 
-def _raw_read():
+def _read():
     with open(next(_kak2py), 'r') as f:
         dtype = f.read(1)
         data = f.read()
     return (dtype, data)
 
 
-def _read():
-    return _replies.pop()
-
-
 def _getter(prefix):
     def getter_impl(name):
         _write('pk_write "d%%%s{%s}"' % (prefix, name))
-        return _read()
+        return _replies.pop()
     return getter_impl
 
 
@@ -67,7 +63,7 @@ val = _getter('val')
 while True:
     try:
         _replies.clear()
-        dtype, data = _raw_read()
+        dtype, data = _read()
         if dtype == 'r':
             exec(textwrap.dedent(data))
         else:
