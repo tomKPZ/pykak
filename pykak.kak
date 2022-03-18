@@ -59,6 +59,7 @@ def -hidden pk_read %{
     }
     try %{
         eval %opt{pk_read_cmd}
+        pk_write "a"
     } catch %{
         pk_write "e%val{error}"
     }

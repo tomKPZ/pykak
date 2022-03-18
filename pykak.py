@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
+import collections
 import itertools
 import textwrap
 import traceback
@@ -20,19 +21,31 @@ _args = _parser.parse_args()
 _kak2py = itertools.cycle([_args.kak2pya, _args.kak2pyb])
 _py2kak = itertools.cycle([_args.py2kaka, _args.py2kakb])
 
+_replies = collections.deque()
+
 
 def _write(response):
     with open(next(_py2kak), 'w') as f:
         f.write(response)
+    while True:
+        data = _raw_read()
+        # TODO: fix this
+        if not data:
+            return
+        _replies.append(data)
 
 
-def _read():
+def _raw_read():
     with open(next(_kak2py), 'r') as f:
         dtype = f.read(1)
         data = f.read()
     if dtype == 'e':
-        raise KakException(data.removeprefix('e'))
+        raise KakException(data)
     return data
+
+
+def _read():
+    return _replies.popleft()
 
 
 def _getter(prefix):
@@ -50,7 +63,7 @@ val = _getter('val')
 
 while True:
     try:
-        exec(textwrap.dedent(_read()))
+        exec(textwrap.dedent(_raw_read()))
     except:
         exc = traceback.format_exc().replace('"', '""')
         _write('echo -markup "{Error}{\\}pykak error: '
