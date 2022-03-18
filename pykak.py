@@ -10,8 +10,6 @@ class KakException(Exception):
     pass
 
 
-_ERROR_UUID = 'f74c66de-3e90-4ee5-ae33-bf7e8e358cb0'
-
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('kak2pya', type=str)
 _parser.add_argument('kak2pyb', type=str)
@@ -30,15 +28,16 @@ def _write(response):
 
 def _read():
     with open(next(_kak2py), 'r') as f:
+        dtype = f.read(1)
         data = f.read()
-    if data.startswith(_ERROR_UUID):
-        raise KakException(data.removeprefix(_ERROR_UUID))
+    if dtype == 'e':
+        raise KakException(data.removeprefix('e'))
     return data
 
 
 def _getter(prefix):
     def getter_impl(name):
-        _write('pk_write "%%%s{%s}"' % (prefix, name))
+        _write('pk_write "d%%%s{%s}"' % (prefix, name))
         return _read()
     return getter_impl
 

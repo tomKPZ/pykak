@@ -1,7 +1,6 @@
 decl str pk_interpreter python3
 
 decl -hidden str pk_source %val{source}
-decl -hidden str error_uuid f74c66de-3e90-4ee5-ae33-bf7e8e358cb0
 
 def pk_init %{
     eval %sh{
@@ -61,7 +60,7 @@ def -hidden pk_read %{
     try %{
         eval %opt{pk_read_cmd}
     } catch %{
-        pk_write "%opt{error_uuid}%val{error}"
+        pk_write "e%val{error}"
     }
 }
 
@@ -170,7 +169,7 @@ def -hidden pk_read_inf %{
 def python -params 1 %{
     pk_autoinit
 
-    pk_write %arg{1}
+    pk_write "r%arg{1}"
 
     pk_read_inf
     unalias global pk_done
