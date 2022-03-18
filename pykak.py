@@ -46,6 +46,10 @@ def _getter(prefix):
     return getter_impl
 
 
+def execk(keys):
+    evalc('exec ' + keys)
+
+
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('pk_dir', type=str)
 _args = _parser.parse_args()
@@ -61,6 +65,7 @@ arg = _getter('arg')
 opt = _getter('opt')
 reg = _getter('reg')
 val = _getter('val')
+evalc = _write
 
 
 while True:
