@@ -7,26 +7,22 @@ def pk_init %{
         pk_dir=$(mktemp -d -t pykak_XXXXXX)
         kak2pya="$pk_dir/kak2pya.fifo"
         kak2pyb="$pk_dir/kak2pyb.fifo"
-        py2kaka="$pk_dir/py2kaka.fifo"
-        py2kakb="$pk_dir/py2kakb.fifo"
+        py2kak="$pk_dir/py2kak.fifo"
         mkfifo "$kak2pya"
         mkfifo "$kak2pyb"
-        mkfifo "$py2kaka"
-        mkfifo "$py2kakb"
+        mkfifo "$py2kak"
         file="$(dirname $kak_opt_pk_source)/pykak.py"
         "$kak_opt_pk_interpreter" "$file" \
-            "$kak2pya" "$kak2pyb" "$py2kaka" "$py2kakb" \
+            "$kak2pya" "$kak2pyb" "$py2kak" \
             > /dev/null 2>&1 </dev/null &
         pk_pid=$!
         echo "
             decl -hidden str pk_dir \"$pk_dir\"
             decl -hidden str kak2pya \"$kak2pya\"
             decl -hidden str kak2pyb \"$kak2pyb\"
-            decl -hidden str py2kaka \"$py2kaka\"
-            decl -hidden str py2kakb \"$py2kakb\"
+            decl -hidden str py2kak \"$py2kak\"
             decl -hidden str pk_pid \"$pk_pid\"
-            def -hidden pk_read_a %{ eval %file{$py2kaka} }
-            def -hidden pk_read_b %{ eval %file{$py2kakb} }
+            def -hidden pk_read_impl %{ eval %file{$py2kak} }
         "
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
@@ -43,22 +39,9 @@ def -hidden pk_autoinit %{
     }
 }
 
-decl -hidden bool py2kak_state true
 def -hidden pk_read %{
-    decl -hidden str pk_read_cmd
-    alias global "pk_%opt{py2kak_state}" nop
     try %{
-        pk_true
-        unalias global pk_true
-        set global py2kak_state false
-        set global pk_read_cmd pk_read_a
-    } catch %{
-        unalias global pk_false
-        set global py2kak_state true
-        set global pk_read_cmd pk_read_b
-    }
-    try %{
-        eval %opt{pk_read_cmd}
+        pk_read_impl
         pk_write "a"
     } catch %{
         pk_write "e%val{error}"
