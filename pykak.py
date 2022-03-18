@@ -34,21 +34,24 @@ def _echo_error(message):
             ('echo -debug "pykak error: %s"' % message))
 
 
+def _format_write_data(data):
+    if type(data) == DoneToken:
+        data = ''
+        unhandled = _drain_read_queue()
+        if unhandled:
+            message = 'unhandled messages: '
+            message += '\n'.join(unhandled)
+            data = _echo_error(message)
+            data += '; '
+        data += 'alias global pk_done nop'
+    return data
+
+
 def _write_inf():
     for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
         with open(fname, 'w') as f:
             with _io_lock:
-                data = _write_queue.get()
-                if type(data) == DoneToken:
-                    data = ''
-                    unhandled = _drain_read_queue()
-                    if unhandled:
-                        message = 'unhandled messages: '
-                        message += '\n'.join(unhandled)
-                        data = _echo_error(message)
-                        data += '; '
-                    data += 'alias global pk_done nop'
-                f.write(data)
+                f.write(format_write_data(_write_queue.get()))
                 _write_queue.task_done()
 
 
