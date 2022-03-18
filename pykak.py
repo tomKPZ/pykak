@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import argparse
-import collections
 import itertools
 import os
 import textwrap
@@ -21,31 +20,35 @@ _kak2py_b = os.path.join(_args.pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
 
-_replies = collections.deque()
+_replies = []
 
 
 def _write(response):
     with open(_py2kak, 'w') as f:
         f.write(response)
     while True:
-        data = _raw_read()
-        # TODO: fix this
-        if not data:
+        dtype, data = _raw_read()
+        if dtype == 'a':
             return
-        _replies.append(data)
+        elif dtype == 'd':
+            _replies.append(data)
+        elif dtype == 'r':
+            raise Exception('reentrancy not supported yet')
+        elif dtype == 'e':
+            raise KakException(data)
+        else:
+            raise Exception('invalid reply type')
 
 
 def _raw_read():
     with open(next(_kak2py), 'r') as f:
         dtype = f.read(1)
         data = f.read()
-    if dtype == 'e':
-        raise KakException(data)
-    return data
+    return (dtype, data)
 
 
 def _read():
-    return _replies.popleft()
+    return _replies.pop()
 
 
 def _getter(prefix):
@@ -63,7 +66,12 @@ val = _getter('val')
 
 while True:
     try:
-        exec(textwrap.dedent(_raw_read()))
+        _replies.clear()
+        dtype, data = _raw_read()
+        if dtype == 'r':
+            exec(textwrap.dedent(data))
+        else:
+            raise Exception('not a request')
     except:
         exc = traceback.format_exc().replace('"', '""')
         _write('echo -markup "{Error}{\\}pykak error: '
