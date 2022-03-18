@@ -22,7 +22,14 @@ def pk_init %{
             decl -hidden str kak2pyb \"$kak2pyb\"
             decl -hidden str py2kak \"$py2kak\"
             decl -hidden str pk_pid \"$pk_pid\"
-            def -hidden pk_read_impl %{ eval %file{$py2kak} }
+            def -hidden pk_read %{
+                try %{
+                    eval %file{$py2kak}
+                    pk_write a
+                } catch %{
+                    pk_write \"e%val{error}\"
+                }
+            }
         "
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
@@ -36,15 +43,6 @@ def -hidden pk_autoinit %{
         nop %opt{pk_pid}
     } catch %{
         pk_init
-    }
-}
-
-def -hidden pk_read %{
-    try %{
-        pk_read_impl
-        pk_write "a"
-    } catch %{
-        pk_write "e%val{error}"
     }
 }
 
