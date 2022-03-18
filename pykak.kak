@@ -18,7 +18,9 @@ def pk_init %{
             def -hidden pk_read %{
                 try %{
                     eval %file{$pk_dir/py2kak.fifo}
-                    pk_write a
+                    try pk_done catch %{
+                        pk_write a
+                    }
                 } catch %{
                     pk_write \"e%val{error}\"
                 }

@@ -23,9 +23,13 @@ _py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
 _replies = []
 
 
-def _write(response):
+def _raw_write(response):
     with open(_py2kak, 'w') as f:
         f.write(response)
+
+
+def _write(response):
+    _raw_write(response)
     while True:
         dtype, data = _read()
         if dtype == 'a':
@@ -74,4 +78,4 @@ while True:
         _write('echo -markup "{Error}{\\}pykak error: '
                'see *debug* buffer"')
         _write('echo -debug "pykak error: %s"' % exc)
-    _write('alias global pk_done nop')
+    _raw_write('alias global pk_done nop')
