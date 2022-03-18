@@ -17,11 +17,11 @@ class DoneToken:
 
 
 def _drain_read_queue():
+    assert _io_lock.locked()
     data = []
     try:
         while True:
             data.append(_read_queue.get_nowait())
-            _read_queue.task_done()
     except queue.Empty:
         pass
     return data
@@ -49,9 +49,10 @@ def _format_write_data(data):
 
 def _write_inf():
     for fname in itertools.cycle([_args.py2kaka, _args.py2kakb]):
+        data = _write_queue.get()
         with open(fname, 'w') as f:
             with _io_lock:
-                f.write(format_write_data(_write_queue.get()))
+                f.write(_format_write_data(data))
                 _write_queue.task_done()
 
 
@@ -64,7 +65,6 @@ def _read_inf():
 
 def _read():
     data = _read_queue.get()
-    _read_queue.task_done()
     if data.startswith(_ERROR_UUID):
         raise KakException(data.removeprefix(_ERROR_UUID))
     return data
