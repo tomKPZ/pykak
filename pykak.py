@@ -69,7 +69,8 @@ while True:
         else:
             raise Exception('not a request')
     except:
-        exc = traceback.format_exc().replace('"', '""')
+        exc = traceback.format_exc()
+        exc = exc.replace('"', '""').replace('%', '%%')
         _write('echo -markup "{Error}{\\}pykak error: '
                'see *debug* buffer"')
         _write('echo -debug "pykak error: %s"' % exc)
