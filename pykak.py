@@ -11,18 +11,6 @@ class KakException(Exception):
     pass
 
 
-_parser = argparse.ArgumentParser('pykak server')
-_parser.add_argument('pk_dir', type=str)
-_args = _parser.parse_args()
-
-_kak2py_a = os.path.join(_args.pk_dir, 'kak2py_a.fifo')
-_kak2py_b = os.path.join(_args.pk_dir, 'kak2py_b.fifo')
-_kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
-_py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
-
-_replies = []
-
-
 def _raw_write(response):
     with open(_py2kak, 'w') as f:
         f.write(response)
@@ -57,6 +45,17 @@ def _getter(prefix):
         return _replies.pop()
     return getter_impl
 
+
+_parser = argparse.ArgumentParser('pykak server')
+_parser.add_argument('pk_dir', type=str)
+_args = _parser.parse_args()
+
+_kak2py_a = os.path.join(_args.pk_dir, 'kak2py_a.fifo')
+_kak2py_b = os.path.join(_args.pk_dir, 'kak2py_b.fifo')
+_kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
+_py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
+
+_replies = []
 
 arg = _getter('arg')
 opt = _getter('opt')
