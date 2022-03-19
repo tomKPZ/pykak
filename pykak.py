@@ -13,6 +13,7 @@ import traceback
 # * figure out quoting (add helpers for quoting/unquoting?)
 # * figure out how commands (exec/eval/etc) should be replicated
 # * arguments to avoid arg(n)?
+# * fix arguments
 
 
 class KakException(Exception):
@@ -56,7 +57,7 @@ def _getter(prefix):
 
 def execk(keys):
     # TODO: escape this
-    evalc('exec ' + keys)
+    evalc('exec "%s"' % keys)
 
 
 _parser = argparse.ArgumentParser('pykak server')
