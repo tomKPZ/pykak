@@ -55,6 +55,7 @@ def _getter(prefix):
 
 
 def execk(keys):
+    # TODO: escape this
     evalc('exec ' + keys)
 
 
