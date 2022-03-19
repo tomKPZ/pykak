@@ -6,6 +6,13 @@ import os
 import textwrap
 import traceback
 
+# TODO:
+# * reentrancy
+#   - properly drain _replies
+# * tests
+# * figure out quoting (add helpers for quoting/unquoting?)
+# * figure out how commands (exec/eval/etc) should be replicated
+
 
 class KakException(Exception):
     pass
@@ -78,6 +85,8 @@ while True:
             raise Exception('not a request')
     except:
         exc = traceback.format_exc()
+        # TODO: is this quoting sufficient?
+        # TODO: coalesce commands.
         exc = exc.replace('"', '""').replace('%', '%%')
         _write('echo -markup "{Error}{\\}pykak error: '
                'see *debug* buffer"')
