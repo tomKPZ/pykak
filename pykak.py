@@ -12,6 +12,7 @@ import traceback
 # * tests
 # * figure out quoting (add helpers for quoting/unquoting?)
 # * figure out how commands (exec/eval/etc) should be replicated
+# * arguments to avoid arg(n)?
 
 
 class KakException(Exception):
