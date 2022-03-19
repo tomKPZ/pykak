@@ -3,6 +3,7 @@
 import argparse
 import itertools
 import os
+import re
 import textwrap
 import traceback
 
@@ -12,8 +13,6 @@ import traceback
 # * tests
 # * figure out quoting (add helpers for quoting/unquoting?)
 # * figure out how commands (exec/eval/etc) should be replicated
-# * arguments to avoid arg(n)?
-# * fix arguments
 
 
 class KakException(Exception):
@@ -44,6 +43,9 @@ def _write(response):
 def _read():
     with open(next(_kak2py), 'r') as f:
         dtype = f.read(1)
+        if dtype == "'":
+            dtype = f.read(1)
+            f.read(2)
         data = f.read()
     return (dtype, data)
 
@@ -60,18 +62,24 @@ def execk(keys):
     evalc('exec "%s"' % keys)
 
 
+def arg(n):
+    return _args[n]
+
+
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('pk_dir', type=str)
-_args = _parser.parse_args()
+_cmd_args = _parser.parse_args()
 
-_kak2py_a = os.path.join(_args.pk_dir, 'kak2py_a.fifo')
-_kak2py_b = os.path.join(_args.pk_dir, 'kak2py_b.fifo')
+_kak2py_a = os.path.join(_cmd_args.pk_dir, 'kak2py_a.fifo')
+_kak2py_b = os.path.join(_cmd_args.pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
-_py2kak = os.path.join(_args.pk_dir, 'py2kak.fifo')
+_py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
 
+_args = []
 _replies = []
 
-arg = _getter('arg')
+_req_pattern = re.compile(r"('')|('(.+?)(?<!')'(?!'))", re.DOTALL)
+
 opt = _getter('opt')
 reg = _getter('reg')
 val = _getter('val')
@@ -83,15 +91,17 @@ while True:
         _replies.clear()
         dtype, data = _read()
         if dtype == 'r':
-            exec(textwrap.dedent(data))
+            _args = [arg[-1].replace("''", "'")
+                     for arg in _req_pattern.findall(data)]
+            exec(textwrap.dedent(_args[0]))
         else:
             raise Exception('not a request')
     except:
         exc = traceback.format_exc()
         # TODO: is this quoting sufficient?
         # TODO: coalesce commands.
-        exc = exc.replace('"', '""').replace('%', '%%')
+        exc = exc.replace("'", "''")
         _write('echo -markup "{Error}{\\}pykak error: '
                'see *debug* buffer"')
-        _write('echo -debug "pykak error: %s"' % exc)
+        _write("echo -debug 'pykak error: %s'" % exc)
     _raw_write('alias global pk_done nop')
