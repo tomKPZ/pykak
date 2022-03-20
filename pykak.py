@@ -13,6 +13,7 @@ import traceback
 # * tests
 # * figure out quoting (add helpers for quoting/unquoting?)
 # * figure out how commands (exec/eval/etc) should be replicated
+# * cleanup temp dir
 
 
 class KakException(Exception):
@@ -46,7 +47,10 @@ def _read():
         if dtype == "'":
             dtype = f.read(1)
             f.read(2)
-        data = f.read()
+            data = (quoted[-1].replace("''", "'")
+                    for quoted in _quoted_pattern.findall(f.read()))
+        else:
+            data = f.read()
     return (dtype, data)
 
 
@@ -62,10 +66,6 @@ def execk(keys):
     evalc('exec "%s"' % keys)
 
 
-def arg(n):
-    return _args[n]
-
-
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('pk_dir', type=str)
 _cmd_args = _parser.parse_args()
@@ -75,10 +75,10 @@ _kak2py_b = os.path.join(_cmd_args.pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
 
-_args = []
+_args = []  # TODO: remove
 _replies = []
 
-_req_pattern = re.compile(r"('')|('(.+?)(?<!')'(?!'))", re.DOTALL)
+_quoted_pattern = re.compile(r"('')|('(.+?)(?<!')'(?!'))", re.DOTALL)
 
 opt = _getter('opt')
 reg = _getter('reg')
@@ -91,12 +91,12 @@ while True:
         _replies.clear()
         dtype, data = _read()
         if dtype == 'r':
-            _args = [arg[-1].replace("''", "'")
-                     for arg in _req_pattern.findall(data)]
-            exec(textwrap.dedent(_args[0]))
+            cmd = textwrap.dedent(next(data))
+            args = list(data)
+            exec(cmd)
         else:
             raise Exception('not a request')
-    except:
+    except Exception:
         exc = traceback.format_exc()
         # TODO: is this quoting sufficient?
         # TODO: coalesce commands.
