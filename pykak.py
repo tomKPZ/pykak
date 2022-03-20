@@ -14,6 +14,7 @@ import traceback
 # * make a kak->py raw write available?
 # * put args before code?
 # * async work on socket
+# * generate response handling code
 
 
 class KakException(Exception):
