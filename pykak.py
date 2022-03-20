@@ -9,11 +9,10 @@ import traceback
 
 # TODO:
 # * reentrancy
-#   - properly drain _replies
 # * tests
-# * figure out quoting (add helpers for quoting/unquoting?)
-# * figure out how commands (exec/eval/etc) should be replicated
 # * cleanup temp dir
+# * add main()
+# * rename evalc?
 
 
 class KakException(Exception):
@@ -37,8 +36,10 @@ def _write(response):
         elif dtype == 'r':
             raise Exception('reentrancy not supported yet')
         elif dtype == 'e':
+            # TODO: put replies into exception
             raise KakException(data)
         else:
+            # Todo: add reply info in exception
             raise Exception('invalid reply type')
 
 
@@ -48,8 +49,7 @@ def _read():
         if dtype == "'":
             dtype = f.read(1)
             f.read(2)
-            data = (quoted[-1].replace("''", "'")
-                    for quoted in _quoted_pattern.findall(f.read()))
+            data = unquote(f.read())
         else:
             data = f.read()
     return (dtype, data)
@@ -62,9 +62,13 @@ def _getter(prefix, quoted):
     return getter_impl
 
 
-def execk(keys):
-    # TODO: escape this
-    return evalc('exec "%s"' % keys)
+def unquote(s):
+    return (quoted[-1].replace("''", "'")
+            for quoted in _quoted_pattern.findall(s))
+
+
+def quote(iter):
+    return ' '.join("'%s'" % x.replace("'", "''") for x in iter)
 
 
 _parser = argparse.ArgumentParser('pykak server')
