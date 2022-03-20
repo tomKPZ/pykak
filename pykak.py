@@ -10,37 +10,18 @@ import traceback
 # TODO:
 # * tests
 # * cleanup temp dir
-# * rename evalc?
 # * more robust process starting
 # * make a kak->py raw write available?
+# * put args before code?
 
 
 class KakException(Exception):
     pass
 
 
-def _raw_write(response):
+def _write(response):
     with open(_py2kak, 'w') as f:
         f.write(response)
-
-
-def _write(response):
-    _raw_write(response)
-    replies = []
-    while True:
-        dtype, data = _read()
-        if dtype == 'a':
-            return replies
-        elif dtype == 'd':
-            replies.append(data)
-        elif dtype == 'r':
-            _process_request(data)
-        elif dtype == 'e':
-            # TODO: put replies into exception
-            raise KakException(data)
-        else:
-            # TODO: add reply info in exception
-            raise Exception('invalid reply type')
 
 
 def _read():
@@ -65,19 +46,38 @@ def _process_request(request):
     except Exception:
         exc = traceback.format_exc()
         # TODO: coalesce commands.
-        _write('echo -markup "{Error}{\\}pykak error: '
-               'see *debug* buffer"')
-        _write("echo -debug 'pykak error:' %s" % quote(exc))
+        keval('echo -markup "{Error}{\\}pykak error: '
+              'see *debug* buffer"')
+        keval("echo -debug 'pykak error:' %s" % quote(exc))
     finally:
         args = old_args
-        _raw_write('alias global pk_done nop')
+        _write('alias global pk_done nop')
 
 
 def _getter(prefix, quoted):
     def getter_impl(name):
-        return _write(('pk_write_quoted d %%%s{%s}' if quoted else
-                       'pk_write "d%%%s{%s}"') % (prefix, name))[0]
+        return keval(('pk_write_quoted d %%%s{%s}' if quoted else
+                      'pk_write "d%%%s{%s}"') % (prefix, name))[0]
     return getter_impl
+
+
+def keval(response):
+    _write(response)
+    replies = []
+    while True:
+        dtype, data = _read()
+        if dtype == 'a':
+            return replies
+        elif dtype == 'd':
+            replies.append(data)
+        elif dtype == 'r':
+            _process_request(data)
+        elif dtype == 'e':
+            # TODO: put replies into exception
+            raise KakException(data)
+        else:
+            # TODO: add reply info in exception
+            raise Exception('invalid reply type')
 
 
 def unquote(s):
@@ -118,7 +118,6 @@ val = _getter('val', False)
 optq = _getter('opt', True)
 regq = _getter('reg', True)
 valq = _getter('val', True)
-evalc = _write
 
 if __name__ == '__main__':
     main()
