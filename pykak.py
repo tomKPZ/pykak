@@ -8,7 +8,6 @@ import textwrap
 import traceback
 
 # TODO:
-# * reentrancy
 # * tests
 # * cleanup temp dir
 # * add main()
@@ -34,12 +33,12 @@ def _write(response):
         elif dtype == 'd':
             replies.append(data)
         elif dtype == 'r':
-            raise Exception('reentrancy not supported yet')
+            _process_request(data)
         elif dtype == 'e':
             # TODO: put replies into exception
             raise KakException(data)
         else:
-            # Todo: add reply info in exception
+            # TODO: add reply info in exception
             raise Exception('invalid reply type')
 
 
@@ -55,6 +54,24 @@ def _read():
     return (dtype, data)
 
 
+def _process_request(request):
+    global args
+    old_args = args
+    try:
+        cmd = textwrap.dedent(next(request))
+        args = list(request)
+        exec(cmd)
+    except Exception:
+        exc = traceback.format_exc()
+        # TODO: coalesce commands.
+        _write('echo -markup "{Error}{\\}pykak error: '
+               'see *debug* buffer"')
+        _write("echo -debug 'pykak error:' %s" % quote(exc))
+    finally:
+        args = old_args
+        _raw_write('alias global pk_done nop')
+
+
 def _getter(prefix, quoted):
     def getter_impl(name):
         return _write(('pk_write_quoted d %%%s{%s}' if quoted else
@@ -67,8 +84,12 @@ def unquote(s):
             for quoted in _quoted_pattern.findall(s))
 
 
-def quote(iter):
-    return ' '.join("'%s'" % x.replace("'", "''") for x in iter)
+def quote(v):
+    def quote_impl(s):
+        return "'%s'" % s.replace("'", "''")
+    if type(v) == str:
+        return quote_impl(v)
+    return ' '.join(quote_impl(s) for s in iter)
 
 
 _parser = argparse.ArgumentParser('pykak server')
@@ -82,6 +103,7 @@ _py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
 
 _quoted_pattern = re.compile(r"(?s)('')|('(.+?)(?<!')'(?!'))")
 
+args = None
 opt = _getter('opt', False)
 reg = _getter('reg', False)
 val = _getter('val', False)
@@ -91,20 +113,8 @@ valq = _getter('val', True)
 evalc = _write
 
 while True:
-    try:
-        dtype, data = _read()
-        if dtype == 'r':
-            cmd = textwrap.dedent(next(data))
-            args = list(data)
-            exec(cmd)
-        else:
-            raise Exception('not a request')
-    except Exception:
-        exc = traceback.format_exc()
-        # TODO: is this quoting sufficient?
-        # TODO: coalesce commands.
-        exc = exc.replace("'", "''")
-        _write('echo -markup "{Error}{\\}pykak error: '
-               'see *debug* buffer"')
-        _write("echo -debug 'pykak error: %s'" % exc)
-    _raw_write('alias global pk_done nop')
+    dtype, data = _read()
+    if dtype == 'r':
+        _process_request(data)
+    else:
+        raise Exception('not a request')
