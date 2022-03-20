@@ -10,8 +10,9 @@ import traceback
 # TODO:
 # * tests
 # * cleanup temp dir
-# * add main()
 # * rename evalc?
+# * more robust process starting
+# * make a kak->py raw write available?
 
 
 class KakException(Exception):
@@ -92,6 +93,13 @@ def quote(v):
     return ' '.join(quote_impl(s) for s in iter)
 
 
+def main():
+    while True:
+        dtype, data = _read()
+        assert dtype == 'r'
+        _process_request(data)
+
+
 _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('pk_dir', type=str)
 _cmd_args = _parser.parse_args()
@@ -112,9 +120,5 @@ regq = _getter('reg', True)
 valq = _getter('val', True)
 evalc = _write
 
-while True:
-    dtype, data = _read()
-    if dtype == 'r':
-        _process_request(data)
-    else:
-        raise Exception('not a request')
+if __name__ == '__main__':
+    main()
