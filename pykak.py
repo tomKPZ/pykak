@@ -13,6 +13,7 @@ import traceback
 # * more robust process starting
 # * make a kak->py raw write available?
 # * put args before code?
+# * async work on socket
 
 
 class KakException(Exception):
