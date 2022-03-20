@@ -27,12 +27,13 @@ def _raw_write(response):
 
 def _write(response):
     _raw_write(response)
+    replies = []
     while True:
         dtype, data = _read()
         if dtype == 'a':
-            return
+            return replies
         elif dtype == 'd':
-            _replies.append(data)
+            replies.append(data)
         elif dtype == 'r':
             raise Exception('reentrancy not supported yet')
         elif dtype == 'e':
@@ -54,16 +55,16 @@ def _read():
     return (dtype, data)
 
 
-def _getter(prefix):
+def _getter(prefix, quoted):
     def getter_impl(name):
-        _write('pk_write "d%%%s{%s}"' % (prefix, name))
-        return _replies.pop()
+        return _write(('pk_write_quoted d %%%s{%s}' if quoted else
+                       'pk_write "d%%%s{%s}"') % (prefix, name))[0]
     return getter_impl
 
 
 def execk(keys):
     # TODO: escape this
-    evalc('exec "%s"' % keys)
+    return evalc('exec "%s"' % keys)
 
 
 _parser = argparse.ArgumentParser('pykak server')
@@ -75,20 +76,18 @@ _kak2py_b = os.path.join(_cmd_args.pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
 
-_args = []  # TODO: remove
-_replies = []
+_quoted_pattern = re.compile(r"(?s)('')|('(.+?)(?<!')'(?!'))")
 
-_quoted_pattern = re.compile(r"('')|('(.+?)(?<!')'(?!'))", re.DOTALL)
-
-opt = _getter('opt')
-reg = _getter('reg')
-val = _getter('val')
+opt = _getter('opt', False)
+reg = _getter('reg', False)
+val = _getter('val', False)
+optq = _getter('opt', True)
+regq = _getter('reg', True)
+valq = _getter('val', True)
 evalc = _write
-
 
 while True:
     try:
-        _replies.clear()
         dtype, data = _read()
         if dtype == 'r':
             cmd = textwrap.dedent(next(data))
