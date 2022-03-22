@@ -14,7 +14,7 @@ def pk_init %{
         "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
         echo "
             decl -hidden str pk_dir \"$pk_dir\"
-            def -hidden pk_read %{
+            def -hidden -override pk_read %{
                 try %{
                     eval %file{$pk_dir/py2kak.fifo}
                     try pk_done catch %{
@@ -69,82 +69,7 @@ def pk_write_quoted -hidden -params 1.. %{
     }
 }
 
-def -hidden pk_read_1 %{
-    try %{ pk_done } catch %{ pk_read }
-}
-def -hidden pk_read_4 %{
-    try %{ pk_done } catch %{
-        pk_read_1; pk_read_1; pk_read_1; pk_read_1;
-    }
-}
-def -hidden pk_read_16 %{
-    try %{ pk_done } catch %{
-        pk_read_4; pk_read_4; pk_read_4; pk_read_4;
-    }
-}
-def -hidden pk_read_64 %{
-    try %{ pk_done } catch %{
-        pk_read_16; pk_read_16; pk_read_16; pk_read_16;
-    }
-}
-def -hidden pk_read_256 %{
-    try %{ pk_done } catch %{
-        pk_read_64; pk_read_64; pk_read_64; pk_read_64;
-    }
-}
-def -hidden pk_read_1024 %{
-    try %{ pk_done } catch %{
-        pk_read_256; pk_read_256; pk_read_256; pk_read_256;
-    }
-}
-def -hidden pk_read_4096 %{
-    try %{ pk_done } catch %{
-        pk_read_1024; pk_read_1024; pk_read_1024; pk_read_1024;
-    }
-}
-def -hidden pk_read_16384 %{
-    try %{ pk_done } catch %{
-        pk_read_4096; pk_read_4096; pk_read_4096; pk_read_4096;
-    }
-}
-def -hidden pk_read_65536 %{
-    try %{ pk_done } catch %{
-        pk_read_16384; pk_read_16384; pk_read_16384; pk_read_16384;
-    }
-}
-def -hidden pk_read_inf %{
-    try %{
-        pk_read_1
-        pk_done
-    } catch %{
-        pk_read_4
-        pk_done
-    } catch %{
-        pk_read_16
-        pk_done
-    } catch %{
-        pk_read_64
-        pk_done
-    } catch %{
-        pk_read_256
-        pk_done
-    } catch %{
-        pk_read_1024
-        pk_done
-    } catch %{
-        pk_read_4096
-        pk_done
-    } catch %{
-        pk_read_16384
-        pk_done
-    } catch %{
-        pk_read_65536
-        pk_done
-    } catch %{
-        pk_read_inf
-        pk_done
-    }
-}
+def -hidden pk_read_1 %{ try %{ pk_done } catch %{ pk_read } }
 
 def python -params 1.. %{
     pk_autoinit

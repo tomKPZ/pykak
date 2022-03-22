@@ -15,11 +15,35 @@ import traceback
 # * make a kak->py raw write available?
 # * put args before code?
 # * async work on socket
-# * generate response handling code
 
 
 class KakException(Exception):
     pass
+
+
+def _gen_read_cmds():
+    N = 9
+    B = 4
+
+    for i in range(1, N):
+        print('def -hidden -override pk_read_%d %%{' % B**i)
+        print('try %{ pk_done } catch %{')
+        for _ in range(B):
+            print('pk_read_%d' % B**(i-1))
+        print('} }')
+
+    print('def -hidden -override pk_read_inf %{')
+    lines = []
+    for i in range(N):
+        lines.extend([
+            '} catch %{',
+            'pk_read_%d' % B**i,
+            'pk_done',
+        ])
+    lines[0] = 'try %{'
+    print('\n'.join(lines))
+    print('} catch %{')
+    print('pk_read_inf } }')
 
 
 def _write(response):
@@ -100,6 +124,7 @@ def main():
     pid = os.fork()
     if pid:
         print('decl -hidden str pk_pid %d' % pid)
+        _gen_read_cmds()
         return 0
     with open('/dev/null', 'w+') as f:
         for fd in range(3):
