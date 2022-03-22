@@ -99,7 +99,7 @@ def keval(response):
 
 
 def unquote(s):
-    return [quoted[-1].replace("''", "'")
+    return [quoted.replace("''", "'")
             for quoted in _quoted_pattern.findall(s)]
 
 
@@ -136,7 +136,7 @@ _kak2py_b = os.path.join(_cmd_args.pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
 
-_quoted_pattern = re.compile(r"(?s)('')|('(.+?)(?<!')'(?!'))")
+_quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 
 args = None
 opt = _getter('opt', False)
