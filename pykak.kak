@@ -14,7 +14,7 @@ def pk_init %{
         "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
         echo "
             decl -hidden str pk_dir \"$pk_dir\"
-            def -hidden -override pk_read %{
+            def -hidden -override pk_read_1 %{
                 try %{
                     eval %file{$pk_dir/py2kak.fifo}
                     try pk_done catch %{
@@ -68,8 +68,6 @@ def pk_write_quoted -hidden -params 1.. %{
         echo -to-file "%opt{pk_dir}/kak2py_b.fifo" -quoting kakoune %arg{@}
     }
 }
-
-def -hidden pk_read_1 %{ try %{ pk_done } catch %{ pk_read } }
 
 def python -params 1.. %{
     pk_autoinit

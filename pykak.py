@@ -21,29 +21,22 @@ class KakException(Exception):
     pass
 
 
+def _gen_read_cmd(cmd, cmds):
+    print('def -hidden pk_read_%s %%{' % cmd)
+    for i, cmd in enumerate(cmds):
+        print('try %{' if i == 0 else '} catch %{')
+        print('pk_read_' + cmd)
+        if i != len(cmds) - 1:
+            print('pk_done')
+    print('} }')
+
+
 def _gen_read_cmds():
     N = 9
     B = 4
-
     for i in range(1, N):
-        print('def -hidden -override pk_read_%d %%{' % B**i)
-        print('try %{ pk_done } catch %{')
-        for _ in range(B):
-            print('pk_read_%d' % B**(i-1))
-        print('} }')
-
-    print('def -hidden -override pk_read_inf %{')
-    lines = []
-    for i in range(N):
-        lines.extend([
-            '} catch %{',
-            'pk_read_%d' % B**i,
-            'pk_done',
-        ])
-    lines[0] = 'try %{'
-    print('\n'.join(lines))
-    print('} catch %{')
-    print('pk_read_inf } }')
+        _gen_read_cmd(str(B**i), [str(B**(i - 1)) for _ in range(B)])
+    _gen_read_cmd('inf', [str(B**i) for i in range(N)] + ['inf'])
 
 
 def _write(response):
