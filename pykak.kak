@@ -11,7 +11,7 @@ def pk_init %{
         mkfifo "$pk_dir/kak2py_b.fifo"
         mkfifo "$pk_dir/py2kak.fifo"
         pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
-        "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
+        PYKAK_DIR="$pk_dir" "$kak_opt_pk_interpreter" "$pykak_py"
         trap - EXIT
     }
     hook -group pykak global KakEnd .* %{ python %{

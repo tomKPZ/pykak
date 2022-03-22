@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import argparse
 import itertools
 import os
 import re
@@ -132,11 +131,7 @@ def main():
     shutil.rmtree(_pk_dir)
 
 
-_parser = argparse.ArgumentParser('pykak server')
-_parser.add_argument('pk_dir', type=str)
-_cmd_args = _parser.parse_args()
-
-_pk_dir = _cmd_args.pk_dir
+_pk_dir = os.environ['PYKAK_DIR']
 _kak2py_a = os.path.join(_pk_dir, 'kak2py_a.fifo')
 _kak2py_b = os.path.join(_pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
