@@ -4,6 +4,7 @@ decl -hidden str pk_source %val{source}
 
 def pk_init %{
     eval %sh{
+        # variable export: kak_session
         set -e
         trap 'rm -rf "$pk_dir"' EXIT
         pk_dir="$(mktemp -d -t pykak_XXXXXX)"

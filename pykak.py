@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import itertools
+import kak_socket
 import os
 import re
 import shutil
@@ -112,6 +113,7 @@ def quote(v):
 
 
 def main():
+    kak_socket.init(os.environ['kak_session'])
     pid = os.fork()
     if pid:
         _gen_read_cmds()

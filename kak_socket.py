@@ -1,0 +1,1 @@
+third_party/kakoune-smooth-scroll/smooth-scroll.py
