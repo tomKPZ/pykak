@@ -35,7 +35,7 @@ def -hidden -override pk_read_1 %{
             pk_write a
         }
     } catch %{
-        pk_write \"e%val{error}\"
+        pk_write "e%val{error}"
     }
 }
 
