@@ -14,15 +14,15 @@ def pk_init %{
         "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
         trap - EXIT
     }
-    hook -group pykak global KakEnd .* %{ nop %sh{
-        kill $kak_opt_pk_pid
-        rm -rf "$kak_opt_pk_dir"
+    hook -group pykak global KakEnd .* %{ python %{
+        global _running
+        _running = False
     }}
 }
 
 def -hidden pk_autoinit %{
     try %{
-        nop %opt{pk_pid}
+        nop %opt{pk_dir}
     } catch %{
         pk_init
     }

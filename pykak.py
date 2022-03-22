@@ -4,6 +4,7 @@ import argparse
 import itertools
 import os
 import re
+import shutil
 import sys
 import textwrap
 import traceback
@@ -117,17 +118,18 @@ def main():
         _gen_read_cmds()
         print('def -hidden -override pk_read_impl %{')
         print('eval %%file{%s} }' % _py2kak)
-        print('decl -hidden str pk_pid %d' % pid)
         print('decl -hidden str pk_dir %s' % quote(_pk_dir))
         return 0
     with open('/dev/null', 'w+') as f:
         for fd in range(3):
             os.dup2(f.fileno(), fd)
 
-    while True:
+    while _running:
         dtype, data = _read()
         assert dtype == 'r'
         _process_request(data)
+
+    shutil.rmtree(_pk_dir)
 
 
 _parser = argparse.ArgumentParser('pykak server')
@@ -139,7 +141,7 @@ _kak2py_a = os.path.join(_pk_dir, 'kak2py_a.fifo')
 _kak2py_b = os.path.join(_pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_pk_dir, 'py2kak.fifo')
-
+_running = True
 _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 
 args = None
