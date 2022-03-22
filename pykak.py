@@ -114,8 +114,11 @@ def quote(v):
 def main():
     pid = os.fork()
     if pid:
-        print('decl -hidden str pk_pid %d' % pid)
         _gen_read_cmds()
+        print('def -hidden -override pk_read_impl %{')
+        print('eval %%file{%s} }' % _py2kak)
+        print('decl -hidden str pk_pid %d' % pid)
+        print('decl -hidden str pk_dir %s' % quote(_pk_dir))
         return 0
     with open('/dev/null', 'w+') as f:
         for fd in range(3):
@@ -131,10 +134,11 @@ _parser = argparse.ArgumentParser('pykak server')
 _parser.add_argument('pk_dir', type=str)
 _cmd_args = _parser.parse_args()
 
-_kak2py_a = os.path.join(_cmd_args.pk_dir, 'kak2py_a.fifo')
-_kak2py_b = os.path.join(_cmd_args.pk_dir, 'kak2py_b.fifo')
+_pk_dir = _cmd_args.pk_dir
+_kak2py_a = os.path.join(_pk_dir, 'kak2py_a.fifo')
+_kak2py_b = os.path.join(_pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
-_py2kak = os.path.join(_cmd_args.pk_dir, 'py2kak.fifo')
+_py2kak = os.path.join(_pk_dir, 'py2kak.fifo')
 
 _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 

@@ -12,19 +12,6 @@ def pk_init %{
         mkfifo "$pk_dir/py2kak.fifo"
         pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
         "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
-        echo "
-            decl -hidden str pk_dir \"$pk_dir\"
-            def -hidden -override pk_read_1 %{
-                try %{
-                    eval %file{$pk_dir/py2kak.fifo}
-                    try pk_done catch %{
-                        pk_write a
-                    }
-                } catch %{
-                    pk_write \"e%val{error}\"
-                }
-            }
-        "
         trap - EXIT
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
@@ -38,6 +25,17 @@ def -hidden pk_autoinit %{
         nop %opt{pk_pid}
     } catch %{
         pk_init
+    }
+}
+
+def -hidden -override pk_read_1 %{
+    try %{
+        pk_read_impl
+        try pk_done catch %{
+            pk_write a
+        }
+    } catch %{
+        pk_write \"e%val{error}\"
     }
 }
 
