@@ -4,17 +4,16 @@ decl -hidden str pk_source %val{source}
 
 def pk_init %{
     eval %sh{
+        set -e
+        trap 'rm -rf "$pk_dir"' EXIT
         pk_dir="$(mktemp -d -t pykak_XXXXXX)"
         mkfifo "$pk_dir/kak2py_a.fifo"
         mkfifo "$pk_dir/kak2py_b.fifo"
         mkfifo "$pk_dir/py2kak.fifo"
-        file="$(dirname $kak_opt_pk_source)/pykak.py"
-        "$kak_opt_pk_interpreter" "$file" "$pk_dir" \
-            > /dev/null 2>&1 </dev/null &
-        pk_pid=$!
+        pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
+        "$kak_opt_pk_interpreter" "$pykak_py" "$pk_dir"
         echo "
             decl -hidden str pk_dir \"$pk_dir\"
-            decl -hidden str pk_pid \"$pk_pid\"
             def -hidden pk_read %{
                 try %{
                     eval %file{$pk_dir/py2kak.fifo}
@@ -26,6 +25,7 @@ def pk_init %{
                 }
             }
         "
+        trap - EXIT
     }
     hook -group pykak global KakEnd .* %{ nop %sh{
         kill $kak_opt_pk_pid

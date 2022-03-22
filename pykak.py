@@ -4,6 +4,7 @@ import argparse
 import itertools
 import os
 import re
+import sys
 import textwrap
 import traceback
 
@@ -96,6 +97,14 @@ def quote(v):
 
 
 def main():
+    pid = os.fork()
+    if pid:
+        print('decl -hidden str pk_pid %d' % pid)
+        return 0
+    with open('/dev/null', 'w+') as f:
+        for fd in range(3):
+            os.dup2(f.fileno(), fd)
+
     while True:
         dtype, data = _read()
         assert dtype == 'r'
@@ -122,4 +131,4 @@ regq = _getter('reg', True)
 valq = _getter('val', True)
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
