@@ -13,7 +13,6 @@ import traceback
 # * cleanup temp dir
 # * more robust process starting
 # * make a kak->py raw write available?
-# * put args before code?
 # * async work on socket
 
 
@@ -22,7 +21,7 @@ class KakException(Exception):
 
 
 def _gen_read_cmd(cmd, cmds):
-    print('def -hidden pk_read_%s %%{' % cmd)
+    print('def -hidden -override pk_read_%s %%{' % cmd)
     for i, cmd in enumerate(cmds):
         print('try %{' if i == 0 else '} catch %{')
         print('pk_read_' + cmd)
@@ -60,9 +59,8 @@ def _process_request(request):
     global args
     old_args = args
     try:
-        cmd = textwrap.dedent(next(request))
-        args = list(request)
-        exec(cmd)
+        args = request
+        exec(textwrap.dedent(args.pop()))
     except Exception:
         exc = traceback.format_exc()
         # TODO: coalesce commands.
@@ -101,8 +99,8 @@ def keval(response):
 
 
 def unquote(s):
-    return (quoted[-1].replace("''", "'")
-            for quoted in _quoted_pattern.findall(s))
+    return [quoted[-1].replace("''", "'")
+            for quoted in _quoted_pattern.findall(s)]
 
 
 def quote(v):
