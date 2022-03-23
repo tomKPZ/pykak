@@ -8,7 +8,7 @@ def init(session):
     socket_path = _get_socket_path(session)
 
 
-def send_cmd(cmd: str, client=None) -> bool:
+def send_cmd(cmd: str) -> bool:
     """
     Send a command string to the Kakoune session. Sent data is a
     concatenation of:
@@ -20,8 +20,6 @@ def send_cmd(cmd: str, client=None) -> bool:
          - Command string
     Return whether the communication was successful.
     """
-    if client:
-        cmd = f"evaluate-commands -client {client} %😬{cmd}😬"
     b_cmd = cmd.encode('utf-8')
     sock = socket.socket(socket.AF_UNIX)
     sock.connect(socket_path)
@@ -40,7 +38,7 @@ def _get_socket_path(session: str) -> str:
     if xdg_runtime_dir is None:
         tmpdir = os.environ.get('TMPDIR', '/tmp')
         session_path = os.path.join(
-            tmpdir, f"kakoune-{os.environ['USER']}", session
+            tmpdir, 'kakoune-' + os.environ['USER'], session
         )
         if not os.path.exists(session_path):  # pre-Kakoune db9ef82
             session_path = os.path.join(

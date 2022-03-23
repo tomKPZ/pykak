@@ -3,10 +3,12 @@
 import itertools
 import kak_socket
 import os
+import queue
 import re
 import shutil
 import sys
 import textwrap
+import threading
 import traceback
 
 # TODO:
@@ -14,7 +16,6 @@ import traceback
 # * cleanup temp dir
 # * more robust process starting
 # * make a kak->py raw write available?
-# * async work on socket
 
 
 class KakException(Exception):
@@ -80,6 +81,18 @@ def _getter(prefix, quoted):
     return getter_impl
 
 
+def _async_worker():
+    while True:
+        request = _async_queue.get()
+        kak_socket.send_cmd(request)
+
+
+def keval_async(cmd, client=None):
+    if client:
+        cmd = 'eval -client %s %%😬%s😬' % (client, cmd)
+    _async_queue.put(cmd)
+
+
 def keval(response):
     _write(response)
     replies = []
@@ -125,10 +138,14 @@ def main():
         for fd in range(3):
             os.dup2(f.fileno(), fd)
 
+    write_thread = threading.Thread(target=_async_worker)
+    write_thread.daemon = True
+    write_thread.start()
+
     while _running:
         dtype, data = _read()
-        assert dtype == 'r'
-        _process_request(data)
+        if dtype == 'r':
+            _process_request(data)
 
     shutil.rmtree(_pk_dir)
 
@@ -140,6 +157,7 @@ _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_pk_dir, 'py2kak.fifo')
 _running = True
 _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
+_async_queue = queue.Queue()
 
 args = None
 opt = _getter('opt', False)
