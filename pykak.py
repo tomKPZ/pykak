@@ -13,9 +13,15 @@ import traceback
 
 # TODO:
 # * tests
-# * cleanup temp dir
-# * more robust process starting
 # * make a kak->py raw write available?
+# * more robust cleanup
+# * add start/stop/restart commands
+# * add async helpter to automatically
+#   call python to implement callbacks?
+# * don't hang on startup failure
+# * LICENSE
+# * README
+# * some sort of code isolation?
 
 
 class KakException(Exception):
