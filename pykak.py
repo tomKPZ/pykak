@@ -15,13 +15,13 @@ import traceback
 # * tests
 # * make a kak->py raw write available?
 # * more robust cleanup
-# * add start/stop/restart commands
 # * add async helpter to automatically
 #   call python to implement callbacks?
 # * don't hang on startup failure
 # * LICENSE
 # * README
 # * some sort of code isolation?
+# * docstrings
 
 
 class KakException(Exception):
@@ -138,7 +138,10 @@ def main():
         _gen_read_cmds()
         print('def -hidden -override pk_read_impl %{')
         print('eval %%file{%s} }' % _py2kak)
-        print('decl -hidden str pk_dir %s' % quote(_pk_dir))
+        print('decl -hidden str pk_dir ' + quote(_pk_dir))
+        print('decl -hidden bool kak2py_state true')
+        print('hook -group pykak global KakEnd .* pk_stop')
+        print('set global pk_running true')
         return 0
     with open('/dev/null', 'w+') as f:
         for fd in range(3):
@@ -148,10 +151,12 @@ def main():
     write_thread.daemon = True
     write_thread.start()
 
-    while _running:
+    while True:
         dtype, data = _read()
         if dtype == 'r':
             _process_request(data)
+        elif dtype == 'f':
+            break
 
     shutil.rmtree(_pk_dir)
 
@@ -161,7 +166,6 @@ _kak2py_a = os.path.join(_pk_dir, 'kak2py_a.fifo')
 _kak2py_b = os.path.join(_pk_dir, 'kak2py_b.fifo')
 _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_pk_dir, 'py2kak.fifo')
-_running = True
 _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 _async_queue = queue.Queue()
 

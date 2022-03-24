@@ -1,32 +1,43 @@
 decl str pk_interpreter python3
 
 decl -hidden str pk_source %val{source}
+decl -hidden bool pk_running false
 
-def pk_init %{
-    eval %sh{
-        # variable export: kak_session
-        set -e
-        trap 'rm -rf "$pk_dir"' EXIT
-        pk_dir="$(mktemp -d -t pykak_XXXXXX)"
-        mkfifo "$pk_dir/kak2py_a.fifo"
-        mkfifo "$pk_dir/kak2py_b.fifo"
-        mkfifo "$pk_dir/py2kak.fifo"
-        pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
-        PYKAK_DIR="$pk_dir" "$kak_opt_pk_interpreter" "$pykak_py"
-        trap - EXIT
+def pk_start %{
+    try %{
+        alias global pk_init_false nop
+        "pk_init_%opt{pk_running}"
+        eval %sh{
+            # variable export: kak_session
+            set -e
+            trap 'rm -rf "$pk_dir"' EXIT
+            pk_dir="$(mktemp -d -t pykak_XXXXXX)"
+            mkfifo "$pk_dir/kak2py_a.fifo"
+            mkfifo "$pk_dir/kak2py_b.fifo"
+            mkfifo "$pk_dir/py2kak.fifo"
+            pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
+            export PYKAK_DIR="$pk_dir"
+            "$kak_opt_pk_interpreter" "$pykak_py"
+            trap - EXIT
+        }
     }
-    hook -group pykak global KakEnd .* %{ python %{
-        global _running
-        _running = False
-    }}
+    unalias global pk_init_false
 }
 
-def -hidden pk_autoinit %{
+def pk_stop %{
     try %{
-        nop %opt{pk_dir}
-    } catch %{
-        pk_init
+        alias global pk_init_true nop
+        "pk_init_%opt{pk_running}"
+        pk_write f
+        rmhooks global pykak
+        set global pk_running false
     }
+    unalias global pk_init_true
+}
+
+def pk_restart %{
+    pk_stop
+    pk_start
 }
 
 def -hidden -override pk_read_1 %{
@@ -40,7 +51,6 @@ def -hidden -override pk_read_1 %{
     }
 }
 
-decl -hidden bool kak2py_state true
 def pk_write -hidden -params 1 %{
     alias global "pk_%opt{kak2py_state}" nop
     try %{
@@ -69,7 +79,7 @@ def pk_write_quoted -hidden -params 1.. %{
 }
 
 def python -params 1.. %{
-    pk_autoinit
+    pk_start
 
     pk_write_quoted r %arg{@}
 
