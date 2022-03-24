@@ -17,6 +17,7 @@ def pk_start %{
             mkfifo "$pk_dir/py2kak.fifo"
             pykak_py="$(dirname $kak_opt_pk_source)/pykak.py"
             export PYKAK_DIR="$pk_dir"
+            export KAK_PID="$PPID"
             "$kak_opt_pk_interpreter" "$pykak_py"
             trap - EXIT
         }

@@ -5,16 +5,18 @@ import kak_socket
 import os
 import queue
 import re
+import select
 import shutil
+import signal
 import sys
 import textwrap
+import time
 import threading
 import traceback
 
 # TODO:
 # * tests
 # * make a kak->py raw write available?
-# * more robust cleanup
 # * add async helpter to automatically
 #   call python to implement callbacks?
 # * README
@@ -92,6 +94,30 @@ def _async_worker():
         kak_socket.send_cmd(request)
 
 
+def _kak_exit_waiter():
+    pid = int(os.environ['KAK_PID'])
+
+    if hasattr(os, 'pidfd_open'):
+        fd = os.pidfd_open(pid)
+        select.select([fd], [], [])
+    elif hasattr(select, 'kqueue'):
+        kq = select.kqueue()
+        kq.control([select.kevent(pid, select.KQ_FILTER_PROC,
+                   select.KQ_EV_ADD, select.KQ_NOTE_EXIT)], 0)
+        select.select([kq.fileno()], [], [])
+    else:
+        HEARTBEAT_INTERVAL_S = 60
+        global _heartbeat_received
+        while True:
+            _heartbeat_received = False
+            keval_async('pk_write h')
+            time.sleep(HEARTBEAT_INTERVAL_S)
+            if not _heartbeat_received:
+                break
+
+    os.kill(os.getpid(), signal.SIGINT)
+
+
 def keval_async(cmd, client=None):
     if client:
         cmd = 'eval -client %s %s' % (client, quote(cmd))
@@ -151,6 +177,10 @@ def main():
     write_thread.daemon = True
     write_thread.start()
 
+    exit_thread = threading.Thread(target=_kak_exit_waiter)
+    exit_thread.daemon = True
+    exit_thread.start()
+
     try:
         while True:
             dtype, data = _read()
@@ -158,6 +188,9 @@ def main():
                 _process_request(data)
             elif dtype == 'f':
                 break
+            elif dtype == 'h':
+                global _heartbeat_received
+                _heartbeat_received = True
     except KeyboardInterrupt:
         pass
     finally:
@@ -171,6 +204,7 @@ _kak2py = itertools.cycle((_kak2py_a, _kak2py_b))
 _py2kak = os.path.join(_pk_dir, 'py2kak.fifo')
 _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 _async_queue = queue.Queue()
+_heartbeat_received = False
 
 args = None
 opt = _getter('opt', False)
