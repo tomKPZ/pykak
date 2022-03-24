@@ -18,7 +18,6 @@ import traceback
 # * add async helpter to automatically
 #   call python to implement callbacks?
 # * don't hang on startup failure
-# * LICENSE
 # * README
 # * some sort of code isolation?
 # * docstrings
