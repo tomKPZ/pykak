@@ -17,10 +17,10 @@ import traceback
 # * more robust cleanup
 # * add async helpter to automatically
 #   call python to implement callbacks?
-# * don't hang on startup failure
 # * README
 # * some sort of code isolation?
 # * docstrings
+# * make it more obvious which commands are private
 
 
 class KakException(Exception):
@@ -135,6 +135,7 @@ def main():
     pid = os.fork()
     if pid:
         _gen_read_cmds()
+        # TODO: coalesce prints
         print('def -hidden -override pk_read_impl %{')
         print('eval %%file{%s} }' % _py2kak)
         print('decl -hidden str pk_dir ' + quote(_pk_dir))
@@ -150,14 +151,17 @@ def main():
     write_thread.daemon = True
     write_thread.start()
 
-    while True:
-        dtype, data = _read()
-        if dtype == 'r':
-            _process_request(data)
-        elif dtype == 'f':
-            break
-
-    shutil.rmtree(_pk_dir)
+    try:
+        while True:
+            dtype, data = _read()
+            if dtype == 'r':
+                _process_request(data)
+            elif dtype == 'f':
+                break
+    except KeyboardInterrupt:
+        pass
+    finally:
+        shutil.rmtree(_pk_dir)
 
 
 _pk_dir = os.environ['PYKAK_DIR']
