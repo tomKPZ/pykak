@@ -94,7 +94,7 @@ def _async_worker():
 
 def keval_async(cmd, client=None):
     if client:
-        cmd = 'eval -client %s %%😬%s😬' % (client, cmd)
+        cmd = 'eval -client %s %s' % (client, quote(cmd))
     _async_queue.put(cmd)
 
 
