@@ -21,7 +21,6 @@ import traceback
 #   call python to implement callbacks?
 # * README
 # * some sort of code isolation?
-# * docstrings
 # * make it more obvious which commands are private
 
 

@@ -3,7 +3,7 @@ decl str pk_interpreter python3
 decl -hidden str pk_source %val{source}
 decl -hidden bool pk_running false
 
-def pk_start %{
+def pk_start -docstring "start pykak server" %{
     try %{
         alias global pk_init_false nop
         "pk_init_%opt{pk_running}"
@@ -25,7 +25,7 @@ def pk_start %{
     unalias global pk_init_false
 }
 
-def pk_stop %{
+def pk_stop -docstring "stop pykak server" %{
     try %{
         alias global pk_init_true nop
         "pk_init_%opt{pk_running}"
@@ -36,7 +36,7 @@ def pk_stop %{
     unalias global pk_init_true
 }
 
-def pk_restart %{
+def pk_restart -docstring "restart pykak server" %{
     pk_stop
     pk_start
 }
@@ -79,7 +79,7 @@ def pk_write_quoted -hidden -params 1.. %{
     }
 }
 
-def python -params 1.. %{
+def python -docstring "run python code" -params 1.. %{
     pk_start
 
     pk_write_quoted r %arg{@}
