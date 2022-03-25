@@ -10,18 +10,14 @@ import shutil
 import signal
 import sys
 import textwrap
-import time
 import threading
+import time
 import traceback
 
 # TODO:
-# * tests
 # * make a kak->py raw write available?
-# * add async helpter to automatically
-#   call python to implement callbacks?
 # * README
-# * some sort of code isolation?
-# * make it more obvious which commands are private
+# * add thread checking on public py functions
 
 
 class KakException(Exception):
