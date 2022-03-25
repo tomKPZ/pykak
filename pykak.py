@@ -64,8 +64,6 @@ def _read():
 
 
 def _process_request(request):
-    global args
-    old_args = args
     try:
         args = request
         exec(textwrap.dedent(args.pop()))
@@ -78,7 +76,6 @@ def _process_request(request):
               'see *debug* buffer"')
         keval("echo -debug 'pykak error:' %s" % quote(exc))
     finally:
-        args = old_args
         _write('alias global pk_done nop')
 
 
@@ -207,7 +204,6 @@ _quoted_pattern = re.compile(r"(?s)(?:'')|(?:'(.+?)(?<!')'(?!'))")
 _async_queue = queue.Queue()
 _heartbeat_received = False
 
-args = None
 opt = _getter('opt', False)
 reg = _getter('reg', False)
 val = _getter('val', False)
