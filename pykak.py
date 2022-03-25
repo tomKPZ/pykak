@@ -14,9 +14,6 @@ import threading
 import time
 import traceback
 
-# TODO:
-# * README
-
 
 class KakException(Exception):
     pass
@@ -145,7 +142,7 @@ def quote(v):
         return "'%s'" % s.replace("'", "''")
     if type(v) == str:
         return quote_impl(v)
-    return ' '.join(quote_impl(s) for s in iter)
+    return ' '.join(quote_impl(s) for s in v)
 
 
 def main():
