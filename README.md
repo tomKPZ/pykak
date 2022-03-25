@@ -35,6 +35,25 @@ def vim-w %{ py %{
 map global normal 'w' ': vim-w<ret>'
 ```
 
+## Arguments
+The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  The below snippet prints `foo bar foo bar foo bar`.
+
+```
+python foo bar 3 %{
+    keval('echo ' + quote(args[:-1] * int(args[-1])))
+}
+```
+
+Arguments can be forwarded from a command to python via Kakoune's `%arg{@}`.  Running `: foo a b c` with the below snippet prints `a b c`.
+
+```
+def foo -params 0.. %{
+    python %arg{@} %{
+        keval('echo ' + quote(args))
+    }
+}
+```
+
 ## Async IO
 Pykak supports running Kakoune commands asynchronously via Kakoune's socket.
 
