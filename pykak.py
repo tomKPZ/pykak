@@ -70,6 +70,8 @@ def _process_request(request):
     try:
         args = request
         exec(textwrap.dedent(args.pop()))
+    except KeyboardInterrupt:
+        raise
     except Exception:
         exc = traceback.format_exc()
         # TODO: coalesce commands.
