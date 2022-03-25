@@ -82,7 +82,6 @@ def pk_write_quoted -hidden -params 1.. %{
 }
 
 def pk_send -params 1 -docstring "send data to python" %{
-    echo -debug 'the arg is ' %arg{1}
     pk_write "d%arg{1}"
 }
 
