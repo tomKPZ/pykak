@@ -59,7 +59,7 @@ The below snippet prints `['hello world', ['hello', 'world']]`.
 ```python
 def raw-io-example %{ py %{
     replies = keval('''
-       pk_send "hello world"
+       pk_send hello world
        pk_sendq hello world
     ''')
     keval('echo ' + quote(str(replies)))

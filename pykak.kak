@@ -81,8 +81,8 @@ def pk_write_quoted -hidden -params 1.. %{
     }
 }
 
-def pk_send -params 1 -docstring "send data to python" %{
-    pk_write "d%arg{1}"
+def pk_send -params 1.. -docstring "send data to python" %{
+    pk_write "d%arg{@}"
 }
 
 def pk_sendq -params 1.. -docstring "send quoted data to python" %{
