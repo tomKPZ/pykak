@@ -2,43 +2,47 @@
 Pykak allows plugin authors to script Kakoune with python.  The implementation uses IPC rather than forking new processes.
 
 ## Goals
-- Ease of use: python
-- Speed: %sh{} is not used other than to start the pykak server
+- Ease of use
+- Speed
 - Minimalism
-- Automatic resource cleanup on exit
+- Automatic resource cleanup
 
 ## Non-goals
 - Completely replacing kakscript
 - Providing a python interface for every Kakoune command
 
-## Examples
+## System requirements
+- Kakoune
+- Python 3
 
-### Sort selections
-`| sort` will sort lines within selections.  Sometimes sorting the selection contents themselves is desired.
-```python
-def sort-sels %{ py %{
-    sels = sorted(valq('selections'))
-    keval('reg dquote %s; exec R' % quote(sels))
-}}
+## Installation
+If using `plug.kak`:
+```
+plug 'tomKPZ/pykak'
 ```
 
-### Alternative word movement
-In Vim, `5w` operates on 5 words, but in Kakoune it selects the 5th word.  This snippet makes Kakoune match Vim's behavior.
-```python
-def vim-w %{ py %{
-    count = int(val('count'))
-    keys = 'w'
-    if count > 1:
-        keys += '%dW' % (count - 1)
-    keval('exec ' + keys)
-}}
-map global normal 'w' ': vim-w<ret>'
+Otherwise, clone the repo and add the following to your `kakrc`:
+```
+source /path/to/pykak/pykak.kak
+```
+
+## Configuration
+`pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3`.
+
+The pykak server will be lazy-loaded on the first call to `python`.  You can also manually start the server with `pk_start`.
+
+Example configuration with `plug.kak`:
+```
+plug 'tomKPZ/pykak' %{
+    set global pk_interpreter pypy3 # defaults to python3
+    pk_start # this is optional
+}
 ```
 
 ## Arguments
 The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  The below snippet prints `foo bar foo bar foo bar`.
 
-```
+```python
 python foo bar 3 %{
     keval('echo ' + quote(args[:-1] * int(args[-1])))
 }
@@ -46,7 +50,7 @@ python foo bar 3 %{
 
 Arguments can be forwarded from a command to python via Kakoune's `%arg{@}`.  Running `: foo a b c` with the below snippet prints `a b c`.
 
-```
+```python
 def foo -params 0.. %{
     python %arg{@} %{
         keval('echo ' + quote(args))
@@ -83,4 +87,28 @@ def raw-io-example %{ py %{
     ''')
     keval('echo ' + quote(str(replies)))
 }}
+```
+
+## Examples
+
+### Sort selections
+`| sort` will sort lines within selections.  Sometimes sorting the selection contents themselves is desired.
+```python
+def sort-sels %{ py %{
+    sels = sorted(valq('selections'))
+    keval('reg dquote %s; exec R' % quote(sels))
+}}
+```
+
+### Alternative word movement
+In Vim, `5w` operates on 5 words, but in Kakoune it selects the 5th word.  This snippet makes Kakoune match Vim's behavior.
+```python
+def vim-w %{ py %{
+    count = int(val('count'))
+    keys = 'w'
+    if count > 1:
+        keys += '%dW' % (count - 1)
+    keval('exec ' + keys)
+}}
+map global normal 'w' ': vim-w<ret>'
 ```
