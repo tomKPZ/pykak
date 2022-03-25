@@ -71,12 +71,23 @@ def pk_write_quoted -hidden -params 1.. %{
         pk_true
         unalias global pk_true
         set global kak2py_state false
-        echo -to-file "%opt{pk_dir}/kak2py_a.fifo" -quoting kakoune %arg{@}
+        echo -to-file "%opt{pk_dir}/kak2py_a.fifo" \
+            -quoting kakoune %arg{@}
     } catch %{
         unalias global pk_false
         set global kak2py_state true
-        echo -to-file "%opt{pk_dir}/kak2py_b.fifo" -quoting kakoune %arg{@}
+        echo -to-file "%opt{pk_dir}/kak2py_b.fifo" \
+            -quoting kakoune %arg{@}
     }
+}
+
+def pk_send -params 1 -docstring "send data to python" %{
+    echo -debug 'the arg is ' %arg{1}
+    pk_write "d%arg{1}"
+}
+
+def pk_sendq -params 1.. -docstring "send quoted data to python" %{
+    pk_write_quoted d %arg{@}
 }
 
 def python -docstring "run python code" -params 1.. %{

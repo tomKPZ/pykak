@@ -15,9 +15,7 @@ import time
 import traceback
 
 # TODO:
-# * make a kak->py raw write available?
 # * README
-# * add thread checking on public py functions
 
 
 class KakException(Exception):
@@ -67,10 +65,11 @@ def _process_request(request):
         raise
     except Exception:
         exc = traceback.format_exc()
-        # TODO: coalesce commands.
-        keval('echo -markup "{Error}{\\}pykak error: '
-              'see *debug* buffer"')
-        keval("echo -debug 'pykak error:' %s" % quote(exc))
+        keval('\n'.join([
+            'echo -markup "{Error}{\\}pykak error: '
+            'see *debug* buffer"',
+            "echo -debug 'pykak error:' %s" % quote(exc)
+        ]))
     finally:
         _write('alias global pk_done nop')
 
@@ -119,6 +118,7 @@ def keval_async(cmd, client=None):
 
 
 def keval(response):
+    assert threading.current_thread() == threading.main_thread()
     _write(response)
     replies = []
     while True:
@@ -130,11 +130,9 @@ def keval(response):
         elif dtype == 'r':
             _process_request(data)
         elif dtype == 'e':
-            # TODO: put replies into exception
             raise KakException(data)
         else:
-            # TODO: add reply info in exception
-            raise Exception('invalid reply type')
+            raise Exception('invalid reply type "%s"' % dtype)
 
 
 def unquote(s):
@@ -155,7 +153,6 @@ def main():
     pid = os.fork()
     if pid:
         _gen_read_cmds()
-        # TODO: coalesce prints
         print('def -hidden -override pk_read_impl %{')
         print('eval %%file{%s} }' % _py2kak)
         print('decl -hidden str pk_dir ' + quote(_pk_dir))
