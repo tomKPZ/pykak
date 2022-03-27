@@ -135,6 +135,29 @@ python %{
 }
 ```
 
+### Errors
+If a Kakoune exception is raised during `keval`, a `KakException` will be raised in python which you can catch if desired.
+
+If a python exception occurs that isn't caught, a stack trace will be printed out in the `*debug*` buffer.
+
+```
+python %{
+    val('this_value_does_not_exist')
+}
+```
+Possible output in `*debug*` buffer:
+```
+pykak error: Traceback (most recent call last):
+  File "/home/tom/.config/kak/plugins/pykak/pykak.py", line 60, in _process_request
+    exec(textwrap.dedent(args.pop()))
+  File "<string>", line 2, in <module>
+  File "/home/tom/.config/kak/plugins/pykak/pykak.py", line 76, in getter_impl
+    return keval(('pk_write_quoted d %%%s{%s}' if quoted else
+  File "/home/tom/.config/kak/plugins/pykak/pykak.py", line 130, in keval
+    raise KakException(data)
+KakException: 2:9: 'pk_read_impl': 2:1: 'eval': no such variable: this_value_does_not_exist
+```
+
 ## Examples
 
 ### Sort selections
