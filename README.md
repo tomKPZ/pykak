@@ -1,17 +1,17 @@
 # Pykak
 Pykak allows plugin authors to script Kakoune with python.  The implementation uses IPC rather than forking new processes.
 
-## Goals
+### Goals
 - Ease of use
 - Speed
 - Minimalism
 - Automatic resource cleanup
 
-## Non-goals
+### Non-goals
 - Completely replacing kakscript
 - Providing a python interface for every Kakoune command
 
-## System requirements
+### System requirements
 - Kakoune
 - Python 3
 
@@ -26,7 +26,7 @@ Otherwise, clone the repo and add the following to your `kakrc`:
 source /path/to/pykak/pykak.kak
 ```
 
-## Configuration
+### Configuration
 `pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3`.
 
 The pykak server will be lazy-loaded on the first call to `python`.  You can also manually start the server with `pk_start`.
@@ -39,11 +39,16 @@ plug 'tomKPZ/pykak' %{
 }
 ```
 
-## Basic usage
+## Usage
+
+### Python
 Python code can be run with the `python` command.  You can also use `py` which is aliased to `python`.
 
-From python, `keval(cmds)` can be used to run Kakoune commands.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
+### Evaluating Kakoune commands
 
+`keval(cmds)` can be used to run Kakoune commands.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
+
+[Default Kakoune commands](https://github.com/mawww/kakoune/blob/master/doc/pages/commands.asciidoc)
 
 ```python
 def example %{
@@ -53,10 +58,14 @@ def example %{
 }
 ```
 
-## Getters
+### Getters
 `opt(x)`, `reg(x)`, and `val(x)` are equivalent to Kakoune's `%opt{x}`, `%reg{x}`, and `%val{x}`.  Unlike with variables in `%sh{}` expansions, these getters fetch values on-the-fly.
 
 Quoted variants are also available: `optq(x)`, `regq(x)`, and `valq(x)`.  The quoted variants should be used when expecting list-type data.
+
+[Default Kakoune options](https://github.com/mawww/kakoune/blob/master/doc/pages/options.asciidoc#builtin-options)
+[Default Kakoune registers](https://github.com/mawww/kakoune/blob/master/doc/pages/registers.asciidoc#default-registers)
+[Default Kakoune values](https://github.com/mawww/kakoune/blob/master/doc/pages/expansions.asciidoc#value-expansions)
 
 ```python
 def getter_example %{
@@ -74,7 +83,7 @@ tmux screen kitty iterm wayland x11
 ['tmux', 'screen', 'kitty', 'iterm', 'wayland', 'x11']
 ```
 
-## Arguments
+### Arguments
 The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  While Kakoune's `%arg{n}` is 1-indexed, `args[n]` is 0-indexed.  The below snippet prints `foo bar foo bar foo bar`.
 
 ```python
@@ -93,7 +102,7 @@ def foo -params 0.. %{
 }
 ```
 
-## Async IO
+### Async IO
 Pykak supports running Kakoune commands asynchronously via Kakoune's socket.
 
 `keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  `keval_async` may be called from any thread.  Communication with Kakoune (via `keval()` or similar) is only allowed on the main thread while Kakoune is servicing a `python` command.
@@ -107,7 +116,7 @@ def async-example %{ py %{
 }}
 ```
 
-## Raw IO
+### Raw IO
 In most cases, raw IO is not necessary.  However, it may be useful to batch multiple IOs together.
 
 `pk_send data` and `pk_sendq data`: Sends `data` from Kakoune to python.  The `q` variant sends the data quoted.  It only makes sense to run these commands during a `keval` since that's the only way to obtain the data, otherwise the data will be discarded.  `keval` returns a list of data sent from these commands.
