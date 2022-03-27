@@ -4,8 +4,8 @@ decl -hidden str pk_source %val{source}
 decl -hidden bool pk_running false
 
 def pk_start -docstring "start pykak server" %{
+    alias global pk_init_false nop
     try %{
-        alias global pk_init_false nop
         "pk_init_%opt{pk_running}"
         eval %sh{
             # variable export: kak_session
@@ -26,8 +26,8 @@ def pk_start -docstring "start pykak server" %{
 }
 
 def pk_stop -docstring "stop pykak server" %{
+    alias global pk_init_true nop
     try %{
-        alias global pk_init_true nop
         "pk_init_%opt{pk_running}"
         pk_write f
         rmhooks global pykak

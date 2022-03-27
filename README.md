@@ -39,8 +39,43 @@ plug 'tomKPZ/pykak' %{
 }
 ```
 
+## Basic usage
+Python code can be run with the `python` command.  You can also use `py` which is aliased to `python`.
+
+From python, `keval(cmds)` can be used to run Kakoune commands.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
+
+
+```python
+def example %{
+    python %{
+        keval('echo "Hello, world!"')
+    }
+}
+```
+
+## Getters
+`opt(x)`, `reg(x)`, and `val(x)` are equivalent to Kakoune's `%opt{x}`, `%reg{x}`, and `%val{x}`.  Unlike with variables in `%sh{}` expansions, these getters fetch values on-the-fly.
+
+Quoted variants are also available: `optq(x)`, `regq(x)`, and `valq(x)`.  The quoted variants should be used when expecting list-type data.
+
+```python
+def getter_example %{
+    python %{
+        wm_str = opt('windowing_modules')
+        wm_list = optq('windowing_modules')
+        keval('echo -debug ' + quote(wm_str))
+        keval('echo -debug ' + quote(str(wm_list)))
+    }
+}
+```
+Possible output:
+```
+tmux screen kitty iterm wayland x11
+['tmux', 'screen', 'kitty', 'iterm', 'wayland', 'x11']
+```
+
 ## Arguments
-The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  The below snippet prints `foo bar foo bar foo bar`.
+The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  While Kakoune's `%arg{n}` is 1-indexed, `args[n]` is 0-indexed.  The below snippet prints `foo bar foo bar foo bar`.
 
 ```python
 python foo bar 3 %{
@@ -61,7 +96,7 @@ def foo -params 0.. %{
 ## Async IO
 Pykak supports running Kakoune commands asynchronously via Kakoune's socket.
 
-`keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  `keval_async` may be called from any thread.
+`keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  `keval_async` may be called from any thread.  Communication with Kakoune (via `keval()` or similar) is only allowed on the main thread while Kakoune is servicing a `python` command.
 
 ```python
 def async-example %{ py %{
