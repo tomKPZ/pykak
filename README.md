@@ -44,37 +44,39 @@ plug 'tomKPZ/pykak' %{
 ### Python
 Python code can be run with the `python` command.  You can also use `py` which is aliased to `python`.
 
+The last argument passed to `python` is a string of code to run.  A Kakoune `%`-string is recommended, but any [quoted string](https://github.com/mawww/kakoune/blob/master/doc/pages/command-parsing.asciidoc#quoted-strings) will do.
+
+```python
+python 'foo()'
+```
+
 ### Evaluating Kakoune commands
 
-`keval(cmds)` can be used to run Kakoune commands.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
+`keval(cmds)` can be used to run Kakoune commands.  You can also use `k` which is aliased to `keval`.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
 
 [Default Kakoune commands](https://github.com/mawww/kakoune/blob/master/doc/pages/commands.asciidoc)
 
 ```python
-def example %{
-    python %{
-        keval('echo "Hello, world!"')
-    }
+python %{
+    keval('echo "Hello, world!"')
 }
 ```
 
 ### Getters
-`opt(x)`, `reg(x)`, and `val(x)` are equivalent to Kakoune's `%opt{x}`, `%reg{x}`, and `%val{x}`.  Unlike with variables in `%sh{}` expansions, these getters fetch values on-the-fly.
+`opt(x)`, `reg(x)`, and `val(x)` are equivalent to Kakoune's `%opt{x}`, `%reg{x}`, and `%val{x}`.  Unlike in `%sh{}` expansions, these getters fetch values on-the-fly.
 
 Quoted variants are also available: `optq(x)`, `regq(x)`, and `valq(x)`.  The quoted variants should be used when expecting list-type data.
 
-[Default Kakoune options](https://github.com/mawww/kakoune/blob/master/doc/pages/options.asciidoc#builtin-options)
-[Default Kakoune registers](https://github.com/mawww/kakoune/blob/master/doc/pages/registers.asciidoc#default-registers)
-[Default Kakoune values](https://github.com/mawww/kakoune/blob/master/doc/pages/expansions.asciidoc#value-expansions)
+- [Default Kakoune options](https://github.com/mawww/kakoune/blob/master/doc/pages/options.asciidoc#builtin-options)
+- [Kakoune registers](https://github.com/mawww/kakoune/blob/master/doc/pages/registers.asciidoc#default-registers)
+- [Kakoune values](https://github.com/mawww/kakoune/blob/master/doc/pages/expansions.asciidoc#value-expansions)
 
 ```python
-def getter_example %{
-    python %{
-        wm_str = opt('windowing_modules')
-        wm_list = optq('windowing_modules')
-        keval('echo -debug ' + quote(wm_str))
-        keval('echo -debug ' + quote(str(wm_list)))
-    }
+python %{
+    wm_str = opt('windowing_modules')
+    wm_list = optq('windowing_modules')
+    keval('echo -debug ' + quote(wm_str))
+    keval('echo -debug ' + quote(str(wm_list)))
 }
 ```
 Possible output:
@@ -108,12 +110,12 @@ Pykak supports running Kakoune commands asynchronously via Kakoune's socket.
 `keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  `keval_async` may be called from any thread.  Communication with Kakoune (via `keval()` or similar) is only allowed on the main thread while Kakoune is servicing a `python` command.
 
 ```python
-def async-example %{ py %{
+python %{
     def foo(client):
         time.sleep(2)
         keval_async('echo hello world', client)
     threading.Thread(target=foo, args=[val('client')]).start()
-}}
+}
 ```
 
 ### Raw IO
@@ -124,13 +126,13 @@ In most cases, raw IO is not necessary.  However, it may be useful to batch mult
 The below snippet prints `['hello world', ['hello', 'world']]`.
 
 ```python
-def raw-io-example %{ py %{
+python %{
     replies = keval('''
        pk_send hello world
        pk_sendq hello world
     ''')
     keval('echo ' + quote(str(replies)))
-}}
+}
 ```
 
 ## Examples
@@ -140,7 +142,9 @@ def raw-io-example %{ py %{
 ```python
 def sort-sels %{ py %{
     sels = sorted(valq('selections'))
-    keval('reg dquote %s; exec R' % quote(sels))
+    # Put the selections into the default paste register,
+    # then execute `R` to replace the selections.
+    k('reg dquote %s; exec R' % quote(sels))
 }}
 ```
 
@@ -152,7 +156,7 @@ def vim-w %{ py %{
     keys = 'w'
     if count > 1:
         keys += '%dW' % (count - 1)
-    keval('exec ' + keys)
+    k('exec ' + keys)
 }}
 map global normal 'w' ': vim-w<ret>'
 ```
