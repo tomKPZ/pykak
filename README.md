@@ -1,5 +1,12 @@
 # Pykak
-Pykak allows plugin authors to script Kakoune with python.  The implementation uses IPC rather than forking new processes.
+Pykak allows plugin authors to script Kakoune with python.
+
+Kakscript is not indended to be a general purpose language.  If constructs like `if` or `for` are needed, a `%sh{}` expansion must be used.  However, this has 2 major drawbacks:
+- starting a shell process is expensive
+- shell is not an appropriate language for many tasks
+The second drawback may be fixed by forking another process like python, but this makes the first drawback much worse.  Pykak aims to solve both of these issues by using IPC instead of forking new processes.
+
+On a Ryzen 5950x, an empty `%sh{}` call takes 1.75ms and an empty `python %{}` call takes 0.129ms (averaged over 10,000 runs) for a 13.5x speedup.
 
 ### Goals
 - Ease of use
@@ -27,7 +34,7 @@ source /path/to/pykak/pykak.kak
 ```
 
 ### Configuration
-`pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3`.
+`pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3` if not specified.
 
 The pykak server will be lazy-loaded on the first call to `python`.  You can also manually start the server with `pk_start`.
 
