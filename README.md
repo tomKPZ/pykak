@@ -39,12 +39,10 @@ source /path/to/pykak/pykak.kak
 
 The pykak server will be lazy-loaded on the first call to `python`.  You can also manually start the server with `pk_start`.
 
-Example configuration with `plug.kak`:
+Example configuration:
 ```
-plug 'tomKPZ/pykak' %{
-    set global pk_interpreter pypy3 # defaults to python3
-    pk_start # this is optional
-}
+set global pk_interpreter pypy3 # optional; defaults to python3
+pk_start # optional
 ```
 
 ## Usage
@@ -59,8 +57,7 @@ python 'foo()'
 ```
 
 ### Evaluating Kakoune commands
-
-`keval(cmds)` can be used to run Kakoune commands.  You can also use `k` which is aliased to `keval`.  Multiple commands may be separated by newlines or `;` as in regular kakscript.
+`keval(cmds)` can be used to run Kakoune commands.  You can also use `k` which is aliased to `keval`.  Multiple commands may be separated by newlines or `;` as in regular kakscript.  Reentrancy is supported: that is, you may call `python` during `keval`.
 
 [Default Kakoune commands](https://github.com/mawww/kakoune/blob/master/doc/pages/commands.asciidoc)
 
@@ -68,6 +65,24 @@ python 'foo()'
 python %{
     keval('echo "Hello, world!"')
 }
+```
+
+### Quoting
+`quote(x)`: Accepts a `str` or a `list` and returns a Kakoune-quoted `str` suitable for passing to commands.
+
+`unquote(x)`: Converts a Kakoune-quoted `str` to a `list` of `str`.  The getters below already take care of quoting, so calling `unquote` should only be necessary when performing raw IO.
+
+```python
+python %{
+    l = ['foo', 'bar', 'baz']
+    keval('echo -debug ' + quote(repr(l)))
+    keval('echo -debug ' + quote(l))
+}
+```
+Output:
+```
+['foo', 'bar', 'baz']
+foo bar baz
 ```
 
 ### Getters
@@ -148,7 +163,7 @@ If a Kakoune exception is raised during `keval`, a `KakException` will be raised
 
 If a python exception occurs that isn't caught, a stack trace will be printed out in the `*debug*` buffer.
 
-```
+```python
 python %{
     val('this_value_does_not_exist')
 }
@@ -167,9 +182,9 @@ KakException: 2:9: 'pk_read_impl': 2:1: 'eval': no such variable: this_value_doe
 ```
 
 ### Persistent state
-Python code is `exec()`ed from within a function, so any variables that are set will not be around for the next `python` call.  To make state persistent, variables must be declared `global`.  Pykak currently doesn't isolate code between different extensions, so it's recommended to prefix global variables with the name of the extenssion to avoid name conflicts.
+Python code is `exec()`ed from within a function, so any variables that are set will not be around for the next `python` call.  To make state persistent, variables must be declared `global`.  Pykak currently doesn't isolate code between different extensions, so it's recommended to prefix global variables with the name of the extension to avoid name conflicts.
 
-```
+```python
 python %{
     global foo, bar, Baz
     foo = 5
