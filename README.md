@@ -4,6 +4,7 @@ Pykak allows plugin authors to script Kakoune with python.
 Kakscript is not indended to be a general purpose language.  If constructs like `if` or `for` are needed, a `%sh{}` expansion must be used.  However, this has 2 major drawbacks:
 - starting a shell process is expensive
 - shell is not an appropriate language for many tasks
+
 The second drawback may be fixed by forking another process like python, but this makes the first drawback much worse.  Pykak aims to solve both of these issues by using IPC instead of forking new processes.
 
 On a Ryzen 5950x, an empty `%sh{}` call takes 1.75ms and an empty `python %{}` call takes 0.129ms (averaged over 10,000 runs) for a 13.5x speedup.
@@ -82,13 +83,13 @@ Quoted variants are also available: `optq(x)`, `regq(x)`, and `valq(x)`.  The qu
 python %{
     wm_str = opt('windowing_modules')
     wm_list = optq('windowing_modules')
-    keval('echo -debug ' + quote(wm_str))
-    keval('echo -debug ' + quote(str(wm_list)))
+    keval('echo -debug ' + quote(repr(wm_str)))
+    keval('echo -debug ' + quote(repr(wm_list)))
 }
 ```
-Possible output:
+Possible output in `*debug*` buffer:
 ```
-tmux screen kitty iterm wayland x11
+'tmux screen kitty iterm wayland x11'
 ['tmux', 'screen', 'kitty', 'iterm', 'wayland', 'x11']
 ```
 
@@ -163,6 +164,22 @@ pykak error: Traceback (most recent call last):
   File "/home/tom/.config/kak/plugins/pykak/pykak.py", line 130, in keval
     raise KakException(data)
 KakException: 2:9: 'pk_read_impl': 2:1: 'eval': no such variable: this_value_does_not_exist
+```
+
+### Persistent state
+Python code is `exec()`ed from within a function, so any variables that are set will not be around for the next `python` call.  To make state persistent, variables must be declared `global`.  Pykak currently doesn't isolate code between different extensions, so it's recommended to prefix global variables with the name of the extenssion to avoid name conflicts.
+
+```
+python %{
+    global foo, bar, Baz
+    foo = 5
+    def bar(x): pass
+    class Baz: pass
+}
+python %{
+    bar(foo)
+    Baz()
+}
 ```
 
 ## Examples
