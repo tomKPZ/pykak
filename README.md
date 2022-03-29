@@ -142,11 +142,9 @@ python %{
 ```
 
 ### Raw IO
-In most cases, raw IO is not necessary.  However, it may be useful to batch multiple IOs together.
+Raw IO may be useful to batch multiple IOs together, or to send data for each buffer with `eval -buffer *`.
 
 `pk_send data` and `pk_sendq data`: Sends `data` from Kakoune to python.  The `q` variant sends the data quoted.  It only makes sense to run these commands during a `keval` since that's the only way to obtain the data, otherwise the data will be discarded.  `keval` returns a list of data sent from these commands.
-
-The below snippet prints `['hello world', ['hello', 'world']]`.
 
 ```python
 python %{
@@ -157,6 +155,15 @@ python %{
     keval('echo ' + quote(str(replies)))
 }
 ```
+Output: `['hello world', ['hello', 'world']]`.
+
+```python
+python %{
+    buffers = keval('eval -buffer * %{ pk_send %val{buf_line_count} }')
+    keval('echo ' + quote(buffers))
+}
+```
+Possible output: `152 234`.
 
 ### Errors
 If a Kakoune exception is raised during `keval`, a `KakException` will be raised in python which you can catch if desired.
