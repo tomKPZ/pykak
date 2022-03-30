@@ -229,3 +229,6 @@ def vim-w %{ py %{
 }}
 map global normal 'w' ': vim-w<ret>'
 ```
+
+### Example plugin
+See [counted.kak](https://github.com/tomKPZ/counted.kak) for an example of a plugin that uses pykak.
