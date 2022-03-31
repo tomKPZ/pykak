@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import functools
 import itertools
 import kak_socket
 import os
@@ -54,10 +55,17 @@ def _read():
     return (dtype, data)
 
 
+@functools.lru_cache(maxsize=128)
+def _compile_code(code):
+    code = textwrap.indent(code, ' ')
+    code = '\n'.join(['def _wrapper(args):', code, '_wrapper(args)'])
+    return compile(code, '<string>', 'exec')
+
+
 def _process_request(request):
     try:
         args = request
-        exec(textwrap.dedent(args.pop()))
+        exec(_compile_code(args.pop()))
     except KeyboardInterrupt:
         raise
     except Exception:
