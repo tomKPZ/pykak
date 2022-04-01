@@ -26,8 +26,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="3.1108586"
-     inkscape:cx="225.98263"
-     inkscape:cy="192.55134"
+     inkscape:cx="245.91282"
+     inkscape:cy="229.84008"
      inkscape:window-width="3840"
      inkscape:window-height="2054"
      inkscape:window-x="-11"
@@ -194,6 +194,13 @@ p { margin-top: 0; margin-bottom: 1rem; }
     <g
        id="g1178"
        transform="matrix(0.26458333,0,0,0.26458333,81.995684,147.90865)">
+      <rect
+         style="fill:#ffffff"
+         id="rect29216"
+         width="609.47803"
+         height="415.64087"
+         x="-218.44627"
+         y="-551.29474" />
       <switch
          id="switch1041">
         <g
@@ -219,7 +226,8 @@ p { margin-top: 0; margin-bottom: 1rem; }
          fill="#ffffff"
          stroke="#000000"
          pointer-events="all"
-         id="rect1186" />
+         id="rect1186"
+         style="fill:#782121" />
       <path
          cell-id="Vw2IiOPl3GtgrMf2S_hp-8"
          d="m -51.26553,-392.65039 h 30.3 q 10,0 10,-10 v -28 q 0,-10 10,-10 h 23.33"
