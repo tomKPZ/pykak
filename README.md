@@ -232,3 +232,18 @@ map global normal 'w' ': vim-w<ret>'
 
 ### Example plugin
 See [counted.kak](https://github.com/tomKPZ/counted.kak) for an example of a plugin that uses pykak.
+
+## Architecture
+![architecture](architecture.svg)
+
+For synchronous communication, 3 fifos (named pipes) are used to communicate between Kakoune and Python.  In the Kakoune->Python direction, 2 pipes are used in an alternating fashion to avoid a race condition.  Otherwise, 2 requests from Kakoune sent back-to-back may appear as a single request to Python.  Using 2 fifos forces synchronization.  In the Python->Kakoune direction, only one fifo is used because it's not possible to write 2 responses from Python without a read in between to force synchronization.
+
+On `py2kak.fifo`, only kakscript commands are sent.  On `kak2py_a.fifo` and `kak2py_b.fifo`, requests are sent with a simple protocol where the first character defines the request type:
+- `r`: request
+- `d`: data
+- `e`: error
+- `f`: kakoune is exiting
+- `h`: heartbeat (only on systems without `pidfd` or `kqueue`)
+- `a`: ack (`keval` is finished)
+
+For asynchronous communication, Kakoune's socket is used to send kakscript commands.  Data only flows from Python to Kakoune on the socket.  The socket code is provided by [kakoune-smooth-scroll](https://github.com/caksoylar/kakoune-smooth-scroll).
