@@ -209,6 +209,7 @@ optq = _getter('opt', True)
 regq = _getter('reg', True)
 valq = _getter('val', True)
 k = keval
+ka = keval_async
 
 if __name__ == '__main__':
     sys.exit(main())
