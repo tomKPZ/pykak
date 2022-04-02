@@ -18,9 +18,11 @@ On a Ryzen 5950x, an empty `%sh{}` call takes 1.75ms and an empty `python %{}` c
 ### Non-goals
 - Completely replacing kakscript
 - Providing a python interface for every Kakoune command
+- Managing plugin behavior
+- Providing isolation between plugins
 
 ### System requirements
-- Kakoune
+- Kakoune v2019.07.01+ (needed for `echo -to-file`)
 - Python 3
 
 ## Installation
@@ -35,13 +37,13 @@ source /path/to/pykak/pykak.kak
 ```
 
 ### Configuration
-`pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3` if not specified.
+`pk_interpreter`: Specify which python interpreter to use.  Defaults to `python3` if not specified.  `pypy3` works, but is not recommended since it doesn't seem to provide any speedup for pykak.
 
 The pykak server will be lazy-loaded on the first call to `python`.  You can also manually start the server with `pk_start`.
 
 Example configuration:
 ```
-set global pk_interpreter pypy3 # optional; defaults to python3
+set global pk_interpreter python3 # Optional. pypy3 also works, but is not recommended.
 pk_start # optional
 ```
 
@@ -79,7 +81,7 @@ python %{
     keval('echo -debug ' + quote(l))
 }
 ```
-Output:
+Output in `*debug*` buffer:
 ```
 ['foo', 'bar', 'baz']
 foo bar baz
@@ -110,15 +112,13 @@ Possible output in `*debug*` buffer:
 
 ### Arguments
 The `python` command accepts arguments before the main code block.  The arguments are accessible via `args`.  While Kakoune's `%arg{n}` is 1-indexed, `args[n]` is 0-indexed.  The below snippet prints `foo bar foo bar foo bar`.
-
 ```python
 python foo bar 3 %{
     keval('echo ' + quote(args[:-1] * int(args[-1])))
 }
 ```
 
-Arguments can be forwarded from a command to python via Kakoune's `%arg{@}`.  Running `: foo a b c` with the below snippet prints `a b c`.
-
+Arguments can be forwarded from a command to python via Kakoune's `%arg{@}`.
 ```python
 def foo -params 0.. %{
     python %arg{@} %{
@@ -126,11 +126,14 @@ def foo -params 0.. %{
     }
 }
 ```
+Running `: foo a b c` prints `a b c`.
 
 ### Async IO
 Pykak supports running Kakoune commands asynchronously via Kakoune's socket.
 
-`keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  `keval_async` may be called from any thread.  Communication with Kakoune (via `keval()` or similar) is only allowed on the main thread while Kakoune is servicing a `python` command.
+`keval_async(cmds, client=None)`: Evaluate `cmds` in Kakoune.  `cmds` is allowed to contain a `python` command.  If `client` is given, `cmds` will be executed in the context of that client.  You can also use `ka()` which is aliased to `keval_async()`.
+
+`keval_async` may be called from any thread.  Communication with Kakoune (via `keval()` or similar) is only allowed on the main thread while Kakoune is servicing a `python` command.
 
 ```python
 python %{
